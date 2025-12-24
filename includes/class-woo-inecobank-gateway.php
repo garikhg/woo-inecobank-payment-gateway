@@ -45,10 +45,7 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway {
         $this->method_description = __( 'Accept payments via Inecobank Payment Gateway', 'woo-inecobank-payment-gateway' );
 
         // Supported features
-        $this->supports = [
-                'products',
-                'refunds',
-        ];
+        $this->supports = [ 'products', 'refunds' ];
 
         // Load the settings.
         $this->init_form_fields();

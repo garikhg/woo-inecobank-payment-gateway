@@ -17,7 +17,7 @@ class Woo_Inecobank_API {
 	/**
 	 * API Base URL
 	 */
-	const API_BASE_URL = 'https://pg.inecoecom.am/payment/rest/';
+	const API_URL = 'https://pg.inecoecom.am/payment/rest/';
 
 	/**
 	 * API credentials
@@ -27,12 +27,14 @@ class Woo_Inecobank_API {
 
 	/**
 	 * Test mode flag
+	 *
 	 * @var bool
 	 */
-	private $test_mode;
+	private $testmode;
 
 	/**
 	 * Logger instance
+	 *
 	 * @var Inecobank_Logger
 	 */
 	private $logger;
@@ -44,7 +46,7 @@ class Woo_Inecobank_API {
 	 * @param bool $testmode
 	 * @param Inecobank_Logger $logger
 	 */
-	public function __construct( $credentials, $testmode, $logger ) {
+	public function __construct( array $credentials, $testmode, $logger ) {
 		$this->credentials = $credentials;
 		$this->testmode    = $testmode;
 		$this->logger      = $logger;
@@ -150,8 +152,8 @@ class Woo_Inecobank_API {
 			$error_message = $response['errorMessage'] ?? __( 'Payment completion failed.', 'woo-inecobank-payment-gateway' );
 
 			return [
-				'success' => false,
-				'message' => $error_message
+				'success'       => false,
+				'error_message' => $error_message
 			];
 		}
 	}
@@ -181,8 +183,8 @@ class Woo_Inecobank_API {
 			$error_message = $response['errorMessage'] ?? __( 'Refund failed.', 'woo-inecobank-payment-gateway' );
 
 			return [
-				'success' => false,
-				'message' => $error_message
+				'success'       => false,
+				'error_message' => $error_message
 			];
 		}
 	}
@@ -211,8 +213,8 @@ class Woo_Inecobank_API {
 			$error_message = $response['errorMessage'] ?? __( 'Order reversal failed.', 'woo-inecobank-payment-gateway' );
 
 			return [
-				'success' => false,
-				'message' => $error_message
+				'success'       => false,
+				'error_message' => $error_message
 			];
 		}
 	}
@@ -221,13 +223,13 @@ class Woo_Inecobank_API {
 	 * Send API request
 	 */
 	private function send_request( $endpoint, $request_data ) {
-		$url = self::API_BASE_URL . $endpoint;
+		$url = self::API_URL . $endpoint;
 		$this->logger->log( 'Sending request to: ' . $url );
 
 		$response = wp_remote_post( $url, [
 			'method'    => 'POST',
-			'headers'   => [ 'Content-Type' => 'application/json' ],
-			'body'      => json_encode( $request_data ),
+			'headers'   => [ 'Content-Type' => 'application/x-www-form-urlencoded' ],
+			'body'      => $request_data,
 			'timeout'   => 70,
 			'sslverify' => true
 		] );
@@ -286,7 +288,7 @@ class Woo_Inecobank_API {
 			$client_id = $order->get_billing_email();
 		}
 
-		return $client_id;
+		return (string) $client_id;
 	}
 
 	/**
