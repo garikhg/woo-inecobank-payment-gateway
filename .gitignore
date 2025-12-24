@@ -1,0 +1,39 @@
+# Dependency directories
+node_modules/
+vendor/
+
+# Build and compiled files
+*.min.js
+*.min.css
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# Log files
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Package manager lock files (if not tracking)
+package-lock.json
+yarn.lock
+
+# Composer (if using)
+composer.lock
+
+# Backup files
+*.bak
+*.backup
+
+# Development and testing
+.phpunit.result.cache
+phpunit.xml
