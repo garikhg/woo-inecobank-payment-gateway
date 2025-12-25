@@ -79,7 +79,6 @@ class Woo_Inecobank_API {
 			'amount'      => $this->get_amount( $order->get_total() ),
 			'currency'    => $this->get_currency_code( $order->get_currency() ),
 			'returnUrl'   => $this->get_return_url(),
-			// todo: check api_request_url() will be wc_inecobank_gateway or woo_inecobank_gateway
 			'description' => $this->get_order_description( $order ),
 			'language'    => $this->credentials['language'],
 			'pageView'    => 'DESKTOP',

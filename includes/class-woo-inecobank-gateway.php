@@ -90,7 +90,7 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
             $this,
             'process_admin_options'
         ));
-        add_action('woocommerce_api_inecobank_gateway', array($this->webhook, 'handle_webhook'));
+        add_action('woocommerce_api_inecobank-gateway', array($this->webhook, 'handle_webhook'));
         add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
 
         // Admin settings validation
@@ -273,6 +273,7 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
                 'redirect' => '',
             );
         }
+
     }
 
     /**

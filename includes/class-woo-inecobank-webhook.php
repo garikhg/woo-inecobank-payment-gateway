@@ -12,21 +12,21 @@ class Woo_Inecobank_Webhook
 {
 	/**
 	 * API handler instance
-	 * @var Inecobank_API
+	 * @var Woo_Inecobank_API
 	 */
 	private $api;
 
 	/**
 	 * Logger instance
-	 * @var Inecobank_Logger
+	 * @var Woo_Inecobank_Logger
 	 */
 	private $logger;
 
 	/**
 	 * Constructor
 	 *
-	 * @param Inecobank_API $api
-	 * @param Inecobank_Logger $logger
+	 * @param Woo_Inecobank_API $api
+	 * @param Woo_Inecobank_Logger $logger
 	 */
 	public function __construct($api, $logger)
 	{
@@ -54,20 +54,26 @@ class Woo_Inecobank_Webhook
 			wp_die('Invalid request', 'Inecobank Payment', array('response' => 400));
 		}
 
-		// Find order by Inecobank order ID
+		// Find WooCommerce order by the order number sent to Inecobank
 		$order = $this->find_order_by_inecobank_id($order_id);
 
 		if (!$order) {
 			$this->logger->log('Order not found for Inecobank ID: ' . $order_id, 'error');
-			// wp_redirect(wc_get_page_permalink('cart'));
 			wp_die('Invalid request', 'Inecobank Payment', array('response' => 400));
-			exit;
 		}
 
 		$this->logger->log('Processing webhook for WC Order #' . $order->get_id() . ', Current Status: ' . $order->get_status());
 
-		// Verify payment status with Inecobank API
-		$status = $this->api->get_order_status($order_id);
+		// Get the UUID saved when order was registered
+		$inecobank_uuid = $order->get_meta('_inecobank_uuid');
+
+		if (empty($inecobank_uuid)) {
+			$this->logger->log('No Inecobank UUID found for order #' . $order->get_id(), 'error');
+			wp_die('Invalid order data', 'Inecobank Payment', array('response' => 400));
+		}
+
+		// Verify payment status with Inecobank API using the UUID
+		$status = $this->api->get_order_status($inecobank_uuid);
 
 		if ($status && isset($status['orderStatus'])) {
 			$this->logger->log('Inecobank Order Status: ' . $status['orderStatus'] . ' for Order #' . $order->get_id());
@@ -230,13 +236,11 @@ class Woo_Inecobank_Webhook
 		// For successful payments, redirect to order received page
 		if (in_array($order_status, array('processing', 'completed', 'on-hold'))) {
 			$redirect_url = $this->get_success_url($order);
-		}
-		// For failed payments, redirect to checkout with error
+		} // For failed payments, redirect to checkout with error
 		elseif (in_array($order_status, array('failed', 'cancelled'))) {
 			wc_add_notice(__('Payment failed. Please try again.', 'woo-inecobank-payment-gateway'), 'error');
 			$redirect_url = $order->get_checkout_payment_url();
-		}
-		// For pending or other statuses, redirect to order pay page
+		} // For pending or other statuses, redirect to order pay page
 		else {
 			$redirect_url = $order->get_checkout_payment_url();
 		}
