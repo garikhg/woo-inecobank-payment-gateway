@@ -55,7 +55,7 @@ class Woo_Inecobank_API {
 	 * @param bool $testmode Test mode flag.
 	 * @param Woo_Inecobank_Logger $logger Logger instance.
 	 */
-	public function __construct( array $credentials, bool $testmode, $logger ) {
+	public function __construct( $credentials, $testmode, $logger ) {
 		$this->credentials = $credentials;
 		$this->testmode    = $testmode;
 		$this->logger      = $logger;
@@ -69,7 +69,7 @@ class Woo_Inecobank_API {
 	 *
 	 * @return array
 	 */
-	public function register_order( WC_Order $order, string $payment_type = 'one_phase' ): array {
+	public function register_order( $order, $payment_type = 'one_phase' ): array {
 		$endpoint = 'two_phase' === $payment_type ? 'registerPreAuth.do' : 'register.do';
 
 		$request_data = array(
@@ -79,6 +79,7 @@ class Woo_Inecobank_API {
 			'amount'      => $this->get_amount( $order->get_total() ),
 			'currency'    => $this->get_currency_code( $order->get_currency() ),
 			'returnUrl'   => $this->get_return_url(),
+			// todo: check api_request_url() will be wc_inecobank_gateway or woo_inecobank_gateway
 			'description' => $this->get_order_description( $order ),
 			'language'    => $this->credentials['language'],
 			'pageView'    => 'DESKTOP',
@@ -346,7 +347,7 @@ class Woo_Inecobank_API {
 	 * @return string
 	 */
 	private function get_return_url(): string {
-		return WC()->api_request_url( 'woo_inecobank_gateway' );
+		return WC()->api_request_url( 'inecobank-gateway' );
 	}
 
 	/**

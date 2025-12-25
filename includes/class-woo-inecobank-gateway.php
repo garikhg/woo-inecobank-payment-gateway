@@ -27,13 +27,31 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
 
     /**
      * Webhook handler instance
+     *
+     * @var Woo_Inecobank_Webhook
      */
     private $webhook;
 
     /**
      * Refund handler instance
+     *
+     * @var Woo_Inecobank_Refund
      */
     private $refund_handler;
+
+    /**
+     * Payment type
+     *
+     * @var string
+     */
+    private $payment_type;
+
+    /**
+     * Debug mode flag
+     *
+     * @var bool
+     */
+    private $debug_mode;
 
     /**
      * Constructor
@@ -47,9 +65,9 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
         $this->method_description = __('Accept payments via Inecobank Payment Gateway', 'woo-inecobank-payment-gateway');
 
         // Supported features
-        $this->supports = ['products', 'refunds'];
+        $this->supports = array('products', 'refunds');
 
-        // Load the settings.
+        // Load the settings
         $this->init_form_fields();
         $this->init_settings();
 
@@ -63,14 +81,23 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
 
         // Initialize classes
         $this->logger = new Woo_Inecobank_Logger($this->debug_mode);
-        $this->api = new Woo_Inecobank_Api($this->get_api_credentials(), $this->testmode, $this->logger);
+        $this->api = new Woo_Inecobank_API($this->get_api_credentials(), false, $this->logger);
         $this->webhook = new Woo_Inecobank_Webhook($this->api, $this->logger);
         $this->refund_handler = new Woo_Inecobank_Refund($this->api, $this->logger);
 
         // Hooks
-        add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
-        add_action('woocommerce_api_inecobank-gateway', [$this->webhook, 'handle_webhook']);
-        add_action('woocommerce_receipt_' . $this->id, [$this, 'receipt_page']);
+        add_action('woocommerce_update_options_payment_gateways_' . $this->id, array(
+            $this,
+            'process_admin_options'
+        ));
+        add_action('woocommerce_api_inecobank_gateway', array($this->webhook, 'handle_webhook'));
+        add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
+
+        // Admin settings validation
+        add_action('woocommerce_update_options_payment_gateways_' . $this->id, array(
+            $this,
+            'validate_admin_options'
+        ), 20);
     }
 
     /**
@@ -80,11 +107,11 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
      */
     private function get_api_credentials()
     {
-        return [
-            'username' => $this->testmode ? $this->get_option('test_username') : $this->get_option('username'),
-            'password' => $this->testmode ? $this->get_option('test_password') : $this->get_option('password'),
+        return array(
+            'username' => $this->get_option('username'),
+            'password' => $this->get_option('password'),
             'language' => $this->get_option('language', 'hy'),
-        ];
+        );
     }
 
     /**
@@ -196,16 +223,28 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
     {
         $order = wc_get_order($order_id);
 
+        if (!$order) {
+            $this->logger->error('Invalid order ID: ' . $order_id);
+            wc_add_notice(__('Invalid order. Please try again.', 'woo-inecobank-payment-gateway'), 'error');
+
+            return array(
+                'result' => 'fail',
+                'redirect' => '',
+            );
+        }
+
         $this->logger->log('Processing payment for order #' . $order_id);
 
         // Register order with Inecobank
         $result = $this->api->register_order($order, $this->payment_type);
 
         if ($result['success']) {
-            // Save both Inecobank UUID and the order number we sent
-            update_post_meta($order_id, '_inecobank_order_id', $order->get_order_number()); // What we sent
-            update_post_meta($order_id, '_inecobank_uuid', $result['order_id']); // UUID from Inecobank
-            update_post_meta($order_id, '_inecobank_payment_type', $this->payment_type);
+            // Save the order number we sent to Inecobank (for webhook lookup)
+            $order->update_meta_data('_inecobank_order_id', $order->get_order_number());
+            // Save the UUID returned by Inecobank (for API status checks)
+            $order->update_meta_data('_inecobank_uuid', $result['order_id']);
+            $order->update_meta_data('_inecobank_payment_type', $this->payment_type);
+            $order->save();
 
             // Mark as pending payment
             $order->update_status('pending', __('Awaiting Inecobank payment', 'woo-inecobank-payment-gateway'));
@@ -219,17 +258,20 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
             $this->logger->log('Order registered successfully. Inecobank UUID: ' . $result['order_id'] . ', Order Number: ' . $order->get_order_number());
 
             // Return redirect to payment page
-            return [
+            return array(
                 'result' => 'success',
                 'redirect' => $result['form_url'],
-            ];
+            );
         } else {
-            wc_add_notice($result['error_message'], 'error');
+            $error_message = $result['error_message'] ?? __('Payment error occurred. Please try again.', 'woo-inecobank-payment-gateway');
+            $this->logger->error('Payment registration failed for order #' . $order_id . ': ' . $error_message);
 
-            return [
+            wc_add_notice($error_message, 'error');
+
+            return array(
                 'result' => 'fail',
                 'redirect' => '',
-            ];
+            );
         }
     }
 
@@ -252,7 +294,7 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
      */
     public function receipt_page($order_id)
     {
-        echo '<p>' . __('Thank you for your order, please click the button below to pay with Inecobank.', 'woo-inecobank-payment-gateway') . '</p>';
+        echo '<p>' . esc_html__('Thank you for your order, please click the button below to pay with Inecobank.', 'woo-inecobank-payment-gateway') . '</p>';
     }
 
     /**
@@ -261,12 +303,13 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
     public function admin_options()
     {
         ?>
-        <h2><?php echo esc_html($this->method_title) ?></h2>
-        <p><?php echo esc_html($this->method_description) ?></p>
+        <h2><?php echo esc_html($this->method_title); ?></h2>
+        <p><?php echo esc_html($this->method_description); ?></p>
 
-        <?php if ($this->testmode): ?>
-            <div class="notice notice-warning inline">
-                <p><?php _e('Test mode is enabled. Use test credentials for testing.', 'woo-inecobank-payment-gateway') ?></p>
+        <?php if (!$this->is_valid_for_use()): ?>
+            <div class="notice notice-error inline">
+                <p><?php esc_html_e('Inecobank Payment Gateway is not available. Your store currency is not supported.', 'woo-inecobank-payment-gateway'); ?>
+                </p>
             </div>
         <?php endif; ?>
 
@@ -293,7 +336,24 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
             return false;
         }
 
+        // Check if currency is supported
+        if (!$this->is_valid_for_use()) {
+            return false;
+        }
+
         return true;
+    }
+
+    /**
+     * Check if this gateway is valid for use
+     *
+     * @return bool
+     */
+    private function is_valid_for_use(): bool
+    {
+        $supported_currencies = array('AMD', 'USD', 'EUR', 'RUB');
+
+        return in_array(get_woocommerce_currency(), $supported_currencies, true);
     }
 
     /**
@@ -312,4 +372,3 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
         return apply_filters('woocommerce_gateway_icon', $icon_html, $this->id);
     }
 }
-
