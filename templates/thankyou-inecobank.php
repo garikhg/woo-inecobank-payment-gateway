@@ -1,10 +1,10 @@
-<!-- 
+<!--
   Inecobank Payment - Custom Thank You Page Template
-  
+
   INSTALLATION:
   1. Copy this file to your theme folder: wp-content/themes/your-theme/woocommerce/checkout/thankyou-inecobank.php
   2. This will automatically override the default thank you page for Inecobank payments
-  
+
   OR use the shortcode [inecobank_thank_you] on any page
 -->
 
@@ -19,7 +19,7 @@
  */
 
 if (!defined('ABSPATH')) {
-    exit;
+    exit; // Exit if accessed directly
 }
 
 // Get the order

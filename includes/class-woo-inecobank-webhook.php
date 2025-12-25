@@ -41,10 +41,16 @@ class Woo_Inecobank_Webhook
 	{
 		$this->logger->log('Webhook received: ' . json_encode($_GET));
 
-		$order_id = isset($_GET['orderId']) ? sanitize_text_field($_GET['orderId']) : '';
+		// Inecobank sends 'orderID' with capital D, but handle both cases
+		$order_id = '';
+		if (isset($_GET['orderID'])) {
+			$order_id = sanitize_text_field($_GET['orderID']);
+		} elseif (isset($_GET['orderId'])) {
+			$order_id = sanitize_text_field($_GET['orderId']);
+		}
 
 		if (empty($order_id)) {
-			$this->logger->log('Invalid webhook request: No orderId', 'error');
+			$this->logger->log('Invalid webhook request: No orderID/orderId parameter', 'error');
 			wp_die('Invalid request', 'Inecobank Payment', array('response' => 400));
 		}
 
@@ -53,7 +59,8 @@ class Woo_Inecobank_Webhook
 
 		if (!$order) {
 			$this->logger->log('Order not found for Inecobank ID: ' . $order_id, 'error');
-			wp_redirect(wc_get_page_permalink('cart'));
+			// wp_redirect(wc_get_page_permalink('cart'));
+			wp_die('Invalid request', 'Inecobank Payment', array('response' => 400));
 			exit;
 		}
 
