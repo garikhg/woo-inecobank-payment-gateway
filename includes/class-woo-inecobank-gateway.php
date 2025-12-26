@@ -16,42 +16,50 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
 {
     /**
      * API handler instance
+     * @var Woo_Inecobank_API
      */
-    private $api;
+    private Woo_Inecobank_API $api;
 
     /**
      * Logger instance
-     * @var Inecobank_Logger
+     * @var Woo_Inecobank_Logger
      */
-    private $logger;
+    private Woo_Inecobank_Logger $logger;
 
     /**
      * Webhook handler instance
      *
      * @var Woo_Inecobank_Webhook
      */
-    private $webhook;
+    private Woo_Inecobank_Webhook $webhook;
 
     /**
      * Refund handler instance
      *
      * @var Woo_Inecobank_Refund
      */
-    private $refund_handler;
+    private Woo_Inecobank_Refund $refund_handler;
 
     /**
      * Payment type
      *
      * @var string
      */
-    private $payment_type;
+    private string $payment_type;
+
+    /**
+     * Test mode flag
+     *
+     * @var bool
+     */
+    private bool $testmode;
 
     /**
      * Debug mode flag
      *
      * @var bool
      */
-    private $debug_mode;
+    private bool $debug_mode;
 
     /**
      * Constructor
@@ -81,7 +89,7 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
 
         // Initialize classes
         $this->logger = new Woo_Inecobank_Logger($this->debug_mode);
-        $this->api = new Woo_Inecobank_API($this->get_api_credentials(), false, $this->logger);
+        $this->api = new Woo_Inecobank_API($this->get_api_credentials(), $this->testmode, $this->logger);
         $this->webhook = new Woo_Inecobank_Webhook($this->api, $this->logger);
         $this->refund_handler = new Woo_Inecobank_Refund($this->api, $this->logger);
 
@@ -107,6 +115,15 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
      */
     private function get_api_credentials()
     {
+        // Return test or live credentials based on test mode
+        if ($this->testmode) {
+            return array(
+                'username' => $this->get_option('test_username'),
+                'password' => $this->get_option('test_password'),
+                'language' => $this->get_option('language', 'hy'),
+            );
+        }
+
         return array(
             'username' => $this->get_option('username'),
             'password' => $this->get_option('password'),
