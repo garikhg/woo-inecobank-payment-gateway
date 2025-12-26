@@ -6,7 +6,7 @@
  * @version 1.1.0
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly
 }
 
@@ -15,7 +15,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  */
-class Woo_Inecobank_API {
+class Woo_Inecobank_API
+{
 
 	/**
 	 * API Base URL
@@ -55,10 +56,11 @@ class Woo_Inecobank_API {
 	 * @param bool $testmode Test mode flag.
 	 * @param Woo_Inecobank_Logger $logger Logger instance.
 	 */
-	public function __construct( $credentials, $testmode, $logger ) {
+	public function __construct($credentials, $testmode, $logger)
+	{
 		$this->credentials = $credentials;
-		$this->testmode    = $testmode;
-		$this->logger      = $logger;
+		$this->testmode = $testmode;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -69,56 +71,57 @@ class Woo_Inecobank_API {
 	 *
 	 * @return array
 	 */
-	public function register_order( $order, $payment_type = 'one_phase' ): array {
+	public function register_order($order, $payment_type = 'one_phase'): array
+	{
 		$endpoint = 'two_phase' === $payment_type ? 'registerPreAuth.do' : 'register.do';
 
 		$request_data = array(
-			'userName'    => $this->credentials['username'],
-			'password'    => $this->credentials['password'],
-			'orderNumber' => $this->get_order_number( $order ),
-			'amount'      => $this->get_amount( $order->get_total() ),
-			'currency'    => $this->get_currency_code( $order->get_currency() ),
-			'returnUrl'   => $this->get_return_url(),
-			'description' => $this->get_order_description( $order ),
-			'language'    => $this->credentials['language'],
-			'pageView'    => 'DESKTOP',
-			'clientId'    => $this->get_client_id( $order ),
-			'jsonParams'  => json_encode( array(
+			'userName' => $this->credentials['username'],
+			'password' => $this->credentials['password'],
+			'orderNumber' => $this->get_order_number($order),
+			'amount' => $this->get_amount($order->get_total()),
+			'currency' => $this->get_currency_code($order->get_currency()),
+			'returnUrl' => $this->get_return_url(),
+			'description' => $this->get_order_description($order),
+			'language' => $this->credentials['language'],
+			'pageView' => 'DESKTOP',
+			'clientId' => $this->get_client_id($order),
+			'jsonParams' => json_encode(array(
 				'orderNumber' => $order->get_order_number(),
-				'orderId'     => $order->get_id(),
-			) ),
+				'orderId' => $order->get_id(),
+			)),
 		);
 
 		// Add optional fields
-		if ( $order->get_billing_phone() ) {
-			$request_data['phone'] = $this->sanitize_phone( $order->get_billing_phone() );
+		if ($order->get_billing_phone()) {
+			$request_data['phone'] = $this->sanitize_phone($order->get_billing_phone());
 		}
 
-		if ( $order->get_billing_email() ) {
+		if ($order->get_billing_email()) {
 			$request_data['email'] = $order->get_billing_email();
 		}
 
-		$request_data = apply_filters( 'woo_inecobank_register_order_data', $request_data, $order );
+		$request_data = apply_filters('woo_inecobank_register_order_data', $request_data, $order);
 
-		$this->logger->log( 'Register order request for order #' . $order->get_id() . ' using ' . $payment_type );
+		$this->logger->log('Register order request for order #' . $order->get_id() . ' using ' . $payment_type);
 
-		$response = $this->send_request( $endpoint, $request_data );
+		$response = $this->send_request($endpoint, $request_data);
 
 		// Check for successful registration
-		if ( isset( $response['errorCode'] ) && 0 === (int) $response['errorCode'] && isset( $response['formUrl'] ) ) {
+		if (isset($response['errorCode']) && 0 === (int) $response['errorCode'] && isset($response['formUrl'])) {
 			return array(
-				'success'  => true,
+				'success' => true,
 				'order_id' => $response['orderId'],
 				'form_url' => $response['formUrl'],
 			);
 		} else {
-			$error_message = $this->get_error_message( $response );
-			$this->logger->error( 'Order registration failed: ' . $error_message );
+			$error_message = $this->get_error_message($response);
+			$this->logger->error('Order registration failed: ' . $error_message);
 
 			return array(
-				'success'       => false,
+				'success' => false,
 				'error_message' => $error_message,
-				'error_code'    => $response['errorCode'] ?? 'unknown',
+				'error_code' => $response['errorCode'] ?? 'unknown',
 			);
 		}
 	}
@@ -130,23 +133,53 @@ class Woo_Inecobank_API {
 	 *
 	 * @return array|false
 	 */
-	public function get_order_status( string $inecobank_order_id ) {
+	public function get_order_status(string $inecobank_order_id)
+	{
 		$request_data = array(
 			'userName' => $this->credentials['username'],
 			'password' => $this->credentials['password'],
-			'orderId'  => $inecobank_order_id,
+			'orderId' => $inecobank_order_id,
 			'language' => $this->credentials['language'],
 		);
 
-		$this->logger->log( 'Getting order status for: ' . $inecobank_order_id );
+		$this->logger->log('Getting order status for: ' . $inecobank_order_id);
 
-		$response = $this->send_request( 'getOrderStatusExtended.do', $request_data );
+		$response = $this->send_request('getOrderStatusExtended.do', $request_data);
 
-		if ( isset( $response['errorCode'] ) && 0 === (int) $response['errorCode'] ) {
+		if (isset($response['errorCode']) && 0 === (int) $response['errorCode']) {
 			return $response;
 		}
 
-		$this->logger->error( 'Failed to get order status: ' . wp_json_encode( $response ) );
+		$this->logger->error('Failed to get order status: ' . wp_json_encode($response));
+
+		return false;
+	}
+
+	/**
+	 * Get Order Status by Order Number
+	 *
+	 * @param string $order_number WooCommerce order number.
+	 *
+	 * @return array|false
+	 */
+	public function get_order_status_by_number(string $order_number)
+	{
+		$request_data = array(
+			'userName' => $this->credentials['username'],
+			'password' => $this->credentials['password'],
+			'orderNumber' => $order_number,
+			'language' => $this->credentials['language'],
+		);
+
+		$this->logger->log('Getting order status by order number: ' . $order_number);
+
+		$response = $this->send_request('getOrderStatusExtended.do', $request_data);
+
+		if (isset($response['errorCode']) && 0 === (int) $response['errorCode']) {
+			return $response;
+		}
+
+		$this->logger->error('Failed to get order status by number: ' . wp_json_encode($response));
 
 		return false;
 	}
@@ -159,22 +192,23 @@ class Woo_Inecobank_API {
 	 *
 	 * @return array
 	 */
-	public function complete_payment( string $inecobank_order_id, float $amount ): array {
+	public function complete_payment(string $inecobank_order_id, float $amount): array
+	{
 		$request_data = array(
 			'userName' => $this->credentials['username'],
 			'password' => $this->credentials['password'],
-			'orderId'  => $inecobank_order_id,
-			'amount'   => $this->get_amount( $amount ),
+			'orderId' => $inecobank_order_id,
+			'amount' => $this->get_amount($amount),
 		);
 
-		$this->logger->log( 'Completing payment for order: ' . $inecobank_order_id );
+		$this->logger->log('Completing payment for order: ' . $inecobank_order_id);
 
-		$response = $this->send_request( 'deposit.do', $request_data );
+		$response = $this->send_request('deposit.do', $request_data);
 
-		if ( isset( $response['errorCode'] ) && 0 === (int) $response['errorCode'] ) {
-			return array( 'success' => true );
+		if (isset($response['errorCode']) && 0 === (int) $response['errorCode']) {
+			return array('success' => true);
 		} else {
-			$error_message = $this->get_error_message( $response, __( 'Payment completion failed.', 'woo-inecobank-payment-gateway' ) );
+			$error_message = $this->get_error_message($response, __('Payment completion failed.', 'woo-inecobank-payment-gateway'));
 
 			return array(
 				'success' => false,
@@ -192,22 +226,23 @@ class Woo_Inecobank_API {
 	 *
 	 * @return array
 	 */
-	public function process_refund( string $inecobank_order_id, $amount = null, string $reason = '' ): array {
+	public function process_refund(string $inecobank_order_id, $amount = null, string $reason = ''): array
+	{
 		$request_data = array(
 			'userName' => $this->credentials['username'],
 			'password' => $this->credentials['password'],
-			'orderId'  => $inecobank_order_id,
-			'amount'   => $this->get_amount( $amount ),
+			'orderId' => $inecobank_order_id,
+			'amount' => $this->get_amount($amount),
 		);
 
-		$this->logger->log( 'Processing refund for order: ' . $inecobank_order_id . ', amount: ' . $amount );
+		$this->logger->log('Processing refund for order: ' . $inecobank_order_id . ', amount: ' . $amount);
 
-		$response = $this->send_request( 'refund.do', $request_data );
+		$response = $this->send_request('refund.do', $request_data);
 
-		if ( isset( $response['errorCode'] ) && 0 === (int) $response['errorCode'] ) {
-			return array( 'success' => true );
+		if (isset($response['errorCode']) && 0 === (int) $response['errorCode']) {
+			return array('success' => true);
 		} else {
-			$error_message = $this->get_error_message( $response, __( 'Refund failed.', 'woo-inecobank-payment-gateway' ) );
+			$error_message = $this->get_error_message($response, __('Refund failed.', 'woo-inecobank-payment-gateway'));
 
 			return array(
 				'success' => false,
@@ -223,21 +258,22 @@ class Woo_Inecobank_API {
 	 *
 	 * @return array
 	 */
-	public function reverse_order( string $inecobank_order_id ): array {
+	public function reverse_order(string $inecobank_order_id): array
+	{
 		$request_data = array(
 			'userName' => $this->credentials['username'],
 			'password' => $this->credentials['password'],
-			'orderId'  => $inecobank_order_id,
+			'orderId' => $inecobank_order_id,
 		);
 
-		$this->logger->log( 'Reversing order: ' . $inecobank_order_id );
+		$this->logger->log('Reversing order: ' . $inecobank_order_id);
 
-		$response = $this->send_request( 'reverse.do', $request_data );
+		$response = $this->send_request('reverse.do', $request_data);
 
-		if ( isset( $response['errorCode'] ) && 0 === (int) $response['errorCode'] ) {
-			return array( 'success' => true );
+		if (isset($response['errorCode']) && 0 === (int) $response['errorCode']) {
+			return array('success' => true);
 		} else {
-			$error_message = $this->get_error_message( $response, __( 'Order reversal failed.', 'woo-inecobank-payment-gateway' ) );
+			$error_message = $this->get_error_message($response, __('Order reversal failed.', 'woo-inecobank-payment-gateway'));
 
 			return array(
 				'success' => false,
@@ -254,48 +290,49 @@ class Woo_Inecobank_API {
 	 *
 	 * @return array
 	 */
-	private function send_request( string $endpoint, array $request_data ): array {
+	private function send_request(string $endpoint, array $request_data): array
+	{
 		$url = self::API_URL . $endpoint;
 
-		$this->logger->log( 'Sending request to: ' . $endpoint );
+		$this->logger->log('Sending request to: ' . $endpoint);
 
 		// Check if we're in local environment
-		if ( $this->is_local_environment() ) {
-			$this->logger->log( 'Local environment detected - attempting connection with extended timeout' );
+		if ($this->is_local_environment()) {
+			$this->logger->log('Local environment detected - attempting connection with extended timeout');
 		}
 
 		$response = wp_remote_post(
 			$url,
 			array(
-				'method'      => 'POST',
-				'headers'     => array( 'Content-Type' => 'application/x-www-form-urlencoded' ),
-				'body'        => $request_data,
-				'timeout'     => self::API_TIMEOUT,
-				'sslverify'   => ! $this->testmode, // Disable SSL verification in test mode
+				'method' => 'POST',
+				'headers' => array('Content-Type' => 'application/x-www-form-urlencoded'),
+				'body' => $request_data,
+				'timeout' => self::API_TIMEOUT,
+				'sslverify' => !$this->testmode, // Disable SSL verification in test mode
 				'httpversion' => '1.1',
 			)
 		);
 
-		if ( is_wp_error( $response ) ) {
+		if (is_wp_error($response)) {
 			$error_message = $response->get_error_message();
-			$this->logger->error( 'API request failed: ' . $error_message );
+			$this->logger->error('API request failed: ' . $error_message);
 
 			return array(
-				'errorCode'    => '999',
+				'errorCode' => '999',
 				'errorMessage' => $error_message,
 			);
 		}
 
-		$body        = wp_remote_retrieve_body( $response );
-		$status_code = wp_remote_retrieve_response_code( $response );
-		$result      = json_decode( $body, true );
+		$body = wp_remote_retrieve_body($response);
+		$status_code = wp_remote_retrieve_response_code($response);
+		$result = json_decode($body, true);
 
-		$this->logger->log( 'API response (HTTP ' . $status_code . '): ' . $body );
+		$this->logger->log('API response (HTTP ' . $status_code . '): ' . $body);
 
-		if ( ! $result || ! is_array( $result ) ) {
+		if (!$result || !is_array($result)) {
 			return array(
-				'errorCode'    => '999',
-				'errorMessage' => __( 'Invalid response from payment gateway.', 'woo-inecobank-payment-gateway' ),
+				'errorCode' => '999',
+				'errorMessage' => __('Invalid response from payment gateway.', 'woo-inecobank-payment-gateway'),
 			);
 		}
 
@@ -307,12 +344,13 @@ class Woo_Inecobank_API {
 	 *
 	 * @return bool
 	 */
-	private function is_local_environment(): bool {
-		$local_indicators = array( 'localhost', '127.0.0.1', '.local', '.test', 'flywheel', 'vagrant', 'docker' );
-		$server_name      = $_SERVER['SERVER_NAME'] ?? '';
+	private function is_local_environment(): bool
+	{
+		$local_indicators = array('localhost', '127.0.0.1', '.local', '.test', 'flywheel', 'vagrant', 'docker');
+		$server_name = $_SERVER['SERVER_NAME'] ?? '';
 
-		foreach ( $local_indicators as $indicator ) {
-			if ( false !== stripos( $server_name, $indicator ) ) {
+		foreach ($local_indicators as $indicator) {
+			if (false !== stripos($server_name, $indicator)) {
 				return true;
 			}
 		}
@@ -328,13 +366,14 @@ class Woo_Inecobank_API {
 	 *
 	 * @return string
 	 */
-	private function get_error_message( array $response, string $default_message = '' ): string {
-		if ( empty( $default_message ) ) {
-			$default_message = __( 'Payment error occurred. Please try again.', 'woo-inecobank-payment-gateway' );
+	private function get_error_message(array $response, string $default_message = ''): string
+	{
+		if (empty($default_message)) {
+			$default_message = __('Payment error occurred. Please try again.', 'woo-inecobank-payment-gateway');
 		}
 
-		if ( isset( $response['errorMessage'] ) && ! empty( $response['errorMessage'] ) ) {
-			return sanitize_text_field( $response['errorMessage'] );
+		if (isset($response['errorMessage']) && !empty($response['errorMessage'])) {
+			return sanitize_text_field($response['errorMessage']);
 		}
 
 		return $default_message;
@@ -345,8 +384,9 @@ class Woo_Inecobank_API {
 	 *
 	 * @return string
 	 */
-	private function get_return_url(): string {
-		return WC()->api_request_url( 'inecobank-gateway' );
+	private function get_return_url(): string
+	{
+		return WC()->api_request_url('inecobank-gateway');
 	}
 
 	/**
@@ -356,7 +396,8 @@ class Woo_Inecobank_API {
 	 *
 	 * @return string
 	 */
-	private function get_order_number( WC_Order $order ): string {
+	private function get_order_number(WC_Order $order): string
+	{
 		return (string) $order->get_order_number();
 	}
 
@@ -367,14 +408,15 @@ class Woo_Inecobank_API {
 	 *
 	 * @return string
 	 */
-	private function get_order_description( WC_Order $order ): string {
+	private function get_order_description(WC_Order $order): string
+	{
 		$description = sprintf(
-		/* translators: %s: order number */
-			__( 'Order #%s', 'woo-inecobank-payment-gateway' ),
+			/* translators: %s: order number */
+			__('Order #%s', 'woo-inecobank-payment-gateway'),
 			$order->get_order_number()
 		);
 
-		return apply_filters( 'woo_inecobank_payment_description', $description, $order );
+		return apply_filters('woo_inecobank_payment_description', $description, $order);
 	}
 
 	/**
@@ -384,10 +426,11 @@ class Woo_Inecobank_API {
 	 *
 	 * @return string
 	 */
-	private function get_client_id( WC_Order $order ): string {
+	private function get_client_id(WC_Order $order): string
+	{
 		$client_id = $order->get_customer_id();
 
-		if ( ! $client_id ) {
+		if (!$client_id) {
 			$client_id = $order->get_billing_email();
 		}
 
@@ -401,11 +444,12 @@ class Woo_Inecobank_API {
 	 *
 	 * @return string
 	 */
-	private function sanitize_phone( string $phone ): string {
+	private function sanitize_phone(string $phone): string
+	{
 		// Remove all non-numeric characters except +
-		$phone = preg_replace( '/[^0-9+]/', '', $phone );
+		$phone = preg_replace('/[^0-9+]/', '', $phone);
 
-		return substr( $phone, 0, 20 ); // Limit to 20 characters
+		return substr($phone, 0, 20); // Limit to 20 characters
 	}
 
 	/**
@@ -415,9 +459,10 @@ class Woo_Inecobank_API {
 	 *
 	 * @return int
 	 */
-	private function get_amount( float $amount ): int {
+	private function get_amount(float $amount): int
+	{
 		// Convert to minor units (cents)
-		return (int) round( $amount * 100 );
+		return (int) round($amount * 100);
 	}
 
 	/**
@@ -427,7 +472,8 @@ class Woo_Inecobank_API {
 	 *
 	 * @return string
 	 */
-	private function get_currency_code( string $currency ): string {
+	private function get_currency_code(string $currency): string
+	{
 		$codes = array(
 			'AMD' => '051',
 			'USD' => '840',
@@ -435,6 +481,6 @@ class Woo_Inecobank_API {
 			'RUB' => '643',
 		);
 
-		return $codes[ $currency ] ?? '051'; // Default to AMD
+		return $codes[$currency] ?? '051'; // Default to AMD
 	}
 }

@@ -68,11 +68,26 @@ class Woo_Inecobank_Webhook
 		$inecobank_uuid = $order->get_meta('_inecobank_uuid');
 
 		if (empty($inecobank_uuid)) {
-			$this->logger->log('No Inecobank UUID found for order #' . $order->get_id(), 'error');
-			wp_die('Invalid order data', 'Inecobank Payment', array('response' => 400));
+			$this->logger->log('No Inecobank UUID found for order #' . $order->get_id(), 'warning');
+			$this->logger->log('Note: Cannot verify status via API without UUID. Inecobank API only supports orderId (UUID), not orderNumber.', 'warning');
+
+			// Since we cannot query the API without UUID, we'll handle this differently
+			// Check if this is a return from successful payment or a callback
+
+			$this->logger->log('Skipping API status check. Redirecting to order received page for manual verification.');
+
+			// Add a note to the order
+			$order->add_order_note(__('Customer returned from Inecobank payment page. UUID was not found - please verify payment status manually in Inecobank dashboard.', 'woo-inecobank-payment-gateway'));
+
+			// Redirect to order received page (don't fail the webhook)
+			$redirect_url = $order->get_checkout_order_received_url();
+			$this->logger->log('Redirecting to: ' . $redirect_url);
+			wp_redirect($redirect_url);
+			exit();
 		}
 
 		// Verify payment status with Inecobank API using the UUID
+		$this->logger->log('Using saved UUID: ' . $inecobank_uuid);
 		$status = $this->api->get_order_status($inecobank_uuid);
 
 		if ($status && isset($status['orderStatus'])) {
@@ -81,8 +96,8 @@ class Woo_Inecobank_Webhook
 			// Process the status update
 			$this->process_order_status($order, $status);
 
-			// Log the final order status
-			$order->reload(); // Reload order to get updated status
+			// Reload order to get updated status
+			$order = wc_get_order($order->get_id());
 			$this->logger->log('Order #' . $order->get_id() . ' status after processing: ' . $order->get_status());
 		} else {
 			$this->logger->log('Failed to get order status from Inecobank API for Order #' . $order->get_id(), 'error');
@@ -105,15 +120,61 @@ class Woo_Inecobank_Webhook
 	 */
 	private function find_order_by_inecobank_id($inecobank_order_id)
 	{
+		$this->logger->log('Searching for order with Inecobank Order ID: ' . $inecobank_order_id);
+
+		// Method 1: Search by meta key (primary method)
 		$orders = wc_get_orders(
 			[
 				'meta_key' => '_inecobank_order_id',
 				'meta_value' => $inecobank_order_id,
-				'limit' => 1
+				'limit' => 1,
+				'orderby' => 'date',
+				'order' => 'DESC'
 			]
 		);
 
-		return !empty($orders[0]) ? $orders[0] : false;
+		if (!empty($orders[0])) {
+			$this->logger->log('Order found by meta key: #' . $orders[0]->get_id());
+			return $orders[0];
+		}
+
+		$this->logger->log('No order found by meta key, trying order number lookup');
+
+		// Method 2: Try to find by order number directly
+		// This handles cases where the order number equals the order ID
+		if (is_numeric($inecobank_order_id)) {
+			$order = wc_get_order($inecobank_order_id);
+			if ($order && $order->get_order_number() == $inecobank_order_id) {
+				$this->logger->log('Order found by direct ID lookup: #' . $order->get_id());
+				// Save the meta for future lookups
+				$order->update_meta_data('_inecobank_order_id', $inecobank_order_id);
+				$order->save();
+				return $order;
+			}
+		}
+
+		$this->logger->log('No order found by direct ID, trying order number search');
+
+		// Method 3: Search all recent pending/processing orders and check their order numbers
+		$recent_orders = wc_get_orders([
+			'limit' => 50,
+			'orderby' => 'date',
+			'order' => 'DESC',
+			'status' => ['pending', 'processing', 'on-hold', 'failed']
+		]);
+
+		foreach ($recent_orders as $order) {
+			if ($order->get_order_number() == $inecobank_order_id) {
+				$this->logger->log('Order found by iterating recent orders: #' . $order->get_id());
+				// Save the meta for future lookups
+				$order->update_meta_data('_inecobank_order_id', $inecobank_order_id);
+				$order->save();
+				return $order;
+			}
+		}
+
+		$this->logger->log('Order not found after all search methods', 'error');
+		return false;
 	}
 
 	/**
