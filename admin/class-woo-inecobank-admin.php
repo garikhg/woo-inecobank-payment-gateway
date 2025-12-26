@@ -22,6 +22,7 @@ class Woo_Inecobank_Admin
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_notices', [$this, 'admin_notices']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
         add_filter('plugin_action_links_' . WOO_INECOBANK_PLUGIN_BASENAME, [$this, 'plugin_action_links']);
     }
 
@@ -34,6 +35,29 @@ class Woo_Inecobank_Admin
             'manage_woocommerce',
             'inecobank-logs',
             array($this, 'logs_page')
+        );
+    }
+
+    /**
+     * Enqueue admin scripts and styles
+     */
+    public function enqueue_admin_scripts($hook)
+    {
+        // Only load on our logs page
+        if ($hook !== 'woocommerce_page_inecobank-logs') {
+            return;
+        }
+
+        // Enqueue WordPress postbox script for collapse/expand functionality
+        wp_enqueue_script('postbox');
+
+        // Enqueue custom script
+        wp_enqueue_script(
+            'inecobank-admin-logs',
+            WOO_INECOBANK_PLUGIN_URL . 'assets/js/admin-logs.js',
+            array('jquery', 'postbox'),
+            '1.0.0',
+            true
         );
     }
 
@@ -102,10 +126,20 @@ class Woo_Inecobank_Admin
             return;
         }
 
-        // Handle log clearing
+        // Handle individual log deletion
+        if (isset($_GET['action']) && $_GET['action'] === 'delete_log' && isset($_GET['file']) && check_admin_referer('inecobank_delete_log')) {
+            $filename = sanitize_file_name($_GET['file']);
+            if ($this->delete_single_log($filename)) {
+                echo '<div class="notice notice-success"><p>' . __('Log file deleted successfully.', 'woo-inecobank-payment-gateway') . '</p></div>';
+            } else {
+                echo '<div class="notice notice-error"><p>' . __('Failed to delete log file.', 'woo-inecobank-payment-gateway') . '</p></div>';
+            }
+        }
+
+        // Handle all logs clearing
         if (isset($_POST['clear_logs']) && check_admin_referer('inecobank_clear_logs')) {
             $this->clear_logs();
-            echo '<div class="notice notice-success"><p>' . __('Logs cleared successfully.', 'woo-inecobank-payment-gateway') . '</p></div>';
+            echo '<div class="notice notice-success"><p>' . __('All logs cleared successfully.', 'woo-inecobank-payment-gateway') . '</p></div>';
         }
 
         $upload_dir = wp_upload_dir();
@@ -135,5 +169,25 @@ class Woo_Inecobank_Admin
                 unlink($file);
             }
         }
+    }
+
+    /**
+     * Delete a single log file
+     *
+     * @param string $filename
+     * @return bool
+     */
+    private function delete_single_log($filename)
+    {
+        $upload_dir = wp_upload_dir();
+        $log_dir = $upload_dir['basedir'] . '/inecobank-logs';
+        $file_path = $log_dir . '/' . $filename;
+
+        // Security check: ensure file exists and is within log directory
+        if (is_file($file_path) && strpos(realpath($file_path), realpath($log_dir)) === 0) {
+            return unlink($file_path);
+        }
+
+        return false;
     }
 }
