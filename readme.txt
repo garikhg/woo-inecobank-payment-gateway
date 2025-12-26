@@ -5,7 +5,7 @@ Tags: payment gateway, inecobank, armenia, woocommerce, payment, credit card, de
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.2
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -285,6 +285,38 @@ Yes, but Inecobank primarily serves Armenian businesses. If you're outside Armen
 
 == Changelog ==
 
+= 1.1.0 - 2025-12-26 =
+* **New Features**
+* ✅ Added "Keep Cart Contents" option to prevent cart clearing when user clicks back from payment page
+* ✅ Implemented automated order status checking every 20 minutes via WP-Cron
+* ✅ Added unique order number generation with timestamp suffix to prevent duplicate order errors
+* ✅ Enhanced logs page with WordPress-native styling (postbox components)
+* ✅ Added collapsible log entries with expand/collapse functionality
+* ✅ Added individual delete buttons for each log file
+* ✅ Created complete translation files (Armenian and Russian)
+
+* **Improvements**
+* ✅ Increased API timeout from 10s to 45s (60s for local environments)
+* ✅ Added automatic retry logic (2 attempts) for timeout errors
+* ✅ Improved connection handling with "Connection: close" header
+* ✅ Enhanced error logging with attempt tracking
+* ✅ Better SSL/TLS connection handling
+
+* **Bug Fixes**
+* ✅ Fixed refund API to use Inecobank UUID instead of order number
+* ✅ Fixed duplicate order number errors on payment retry
+* ✅ Fixed 403 errors on logs page collapse/expand state saving
+* ✅ Fixed testmode property usage for API initialization
+* ✅ Fixed nonce mismatch in log deletion
+* ✅ Resolved type hint errors in Gateway and Refund classes
+* ✅ Fixed cart emptying logic for webhook returns after successful payment
+
+* **Technical Updates**
+* ✅ Orders now automatically marked as "Failed" if unpaid after 20 minutes
+* ✅ API automatically retries on connection timeout
+* ✅ Improved webhook handling for orders without UUID
+* ✅ Enhanced logging system with better categorization
+
 = 1.0.0 - 2024-12-26 =
 * **Initial Release**
 * ✅ One-phase (immediate) payment processing
@@ -301,6 +333,9 @@ Yes, but Inecobank primarily serves Armenian businesses. If you're outside Armen
 * ✅ PHP 7.2+ support
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Major update with automated order management, improved connection reliability, and enhanced user experience. Recommended for all users.
 
 = 1.0.0 =
 Initial release. Install to start accepting payments through Inecobank Payment Gateway.

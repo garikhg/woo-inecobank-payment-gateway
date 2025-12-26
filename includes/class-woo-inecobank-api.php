@@ -301,29 +301,73 @@ class Woo_Inecobank_API
 		$this->logger->log('Sending request to: ' . $endpoint);
 
 		// Check if we're in local environment
-		if ($this->is_local_environment()) {
+		$is_local = $this->is_local_environment();
+		if ($is_local) {
 			$this->logger->log('Local environment detected - attempting connection with extended timeout');
 		}
 
-		$response = wp_remote_post(
-			$url,
-			array(
-				'method' => 'POST',
-				'headers' => array('Content-Type' => 'application/x-www-form-urlencoded'),
-				'body' => $request_data,
-				'timeout' => self::API_TIMEOUT,
-				'sslverify' => !$this->testmode, // Disable SSL verification in test mode
-				'httpversion' => '1.1',
-			)
-		);
+		// Extended timeout for better reliability
+		$timeout = $is_local ? 60 : self::API_TIMEOUT;
 
+		// Try up to 2 times in case of timeout
+		$max_attempts = 2;
+		$attempt = 0;
+		$last_error = null;
+
+		while ($attempt < $max_attempts) {
+			$attempt++;
+
+			if ($attempt > 1) {
+				$this->logger->log('Retrying request (attempt ' . $attempt . '/' . $max_attempts . ')');
+			}
+
+			$response = wp_remote_post(
+				$url,
+				array(
+					'method' => 'POST',
+					'headers' => array(
+						'Content-Type' => 'application/x-www-form-urlencoded',
+						'Connection' => 'close', // Prevent keep-alive issues
+					),
+					'body' => $request_data,
+					'timeout' => $timeout,
+					'sslverify' => !$this->testmode, // Disable SSL verification in test mode
+					'httpversion' => '1.1',
+					'redirection' => 0, // Don't follow redirects
+					'blocking' => true,
+				)
+			);
+
+			if (is_wp_error($response)) {
+				$error_message = $response->get_error_message();
+				$error_code = $response->get_error_code();
+				$last_error = $error_message;
+
+				$this->logger->error('API request failed (attempt ' . $attempt . '): ' . $error_code . ' - ' . $error_message);
+
+				// If it's a timeout error and we have attempts left, retry
+				if (($error_code === 'http_request_failed' || strpos($error_message, 'Timeout') !== false || strpos($error_message, 'timeout') !== false) && $attempt < $max_attempts) {
+					$this->logger->log('Timeout detected, waiting 2 seconds before retry...');
+					sleep(2);
+					continue;
+				}
+
+				// For other errors or final attempt, return error
+				return array(
+					'errorCode' => '999',
+					'errorMessage' => $error_message . ' (Attempt ' . $attempt . '/' . $max_attempts . ')',
+				);
+			}
+
+			// Success - break out of retry loop
+			break;
+		}
+
+		// If we exhausted all attempts with errors
 		if (is_wp_error($response)) {
-			$error_message = $response->get_error_message();
-			$this->logger->error('API request failed: ' . $error_message);
-
 			return array(
 				'errorCode' => '999',
-				'errorMessage' => $error_message,
+				'errorMessage' => $last_error . ' (Failed after ' . $max_attempts . ' attempts)',
 			);
 		}
 
