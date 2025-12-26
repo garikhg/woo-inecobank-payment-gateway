@@ -307,7 +307,15 @@ class Woo_Inecobank_API
 		}
 
 		// Extended timeout for better reliability
-		$timeout = $is_local ? 60 : self::API_TIMEOUT;
+		// Base timeout - can be overridden via filter
+		$base_timeout = $is_local ? 60 : self::API_TIMEOUT;
+		$timeout = apply_filters('woo_inecobank_api_timeout', $base_timeout, $endpoint);
+
+		// Try to override PHP's default_socket_timeout
+		$original_timeout = ini_get('default_socket_timeout');
+		ini_set('default_socket_timeout', $timeout);
+
+		$this->logger->log('Using timeout: ' . $timeout . ' seconds');
 
 		// Try up to 2 times in case of timeout
 		$max_attempts = 2;
@@ -321,22 +329,24 @@ class Woo_Inecobank_API
 				$this->logger->log('Retrying request (attempt ' . $attempt . '/' . $max_attempts . ')');
 			}
 
-			$response = wp_remote_post(
-				$url,
-				array(
-					'method' => 'POST',
-					'headers' => array(
-						'Content-Type' => 'application/x-www-form-urlencoded',
-						'Connection' => 'close', // Prevent keep-alive issues
-					),
-					'body' => $request_data,
-					'timeout' => $timeout,
-					'sslverify' => !$this->testmode, // Disable SSL verification in test mode
-					'httpversion' => '1.1',
-					'redirection' => 0, // Don't follow redirects
-					'blocking' => true,
-				)
+			$args = array(
+				'method' => 'POST',
+				'headers' => array(
+					'Content-Type' => 'application/x-www-form-urlencoded',
+					'Connection' => 'close', // Prevent keep-alive issues
+				),
+				'body' => $request_data,
+				'timeout' => $timeout,
+				'sslverify' => !$this->testmode, // Disable SSL verification in test mode
+				'httpversion' => '1.1',
+				'redirection' => 0, // Don't follow redirects
+				'blocking' => true,
 			);
+
+			// Allow filtering of request args
+			$args = apply_filters('woo_inecobank_request_args', $args, $endpoint);
+
+			$response = wp_remote_post($url, $args);
 
 			if (is_wp_error($response)) {
 				$error_message = $response->get_error_message();
@@ -353,6 +363,9 @@ class Woo_Inecobank_API
 				}
 
 				// For other errors or final attempt, return error
+				// Restore original timeout
+				ini_set('default_socket_timeout', $original_timeout);
+
 				return array(
 					'errorCode' => '999',
 					'errorMessage' => $error_message . ' (Attempt ' . $attempt . '/' . $max_attempts . ')',
@@ -362,6 +375,9 @@ class Woo_Inecobank_API
 			// Success - break out of retry loop
 			break;
 		}
+
+		// Restore original timeout
+		ini_set('default_socket_timeout', $original_timeout);
 
 		// If we exhausted all attempts with errors
 		if (is_wp_error($response)) {
