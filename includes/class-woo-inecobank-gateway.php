@@ -62,6 +62,13 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
     private bool $debug_mode;
 
     /**
+     * Keep cart enabled flag
+     * 
+     * @var bool
+     */
+    private bool $keep_cart;
+
+    /**
      * Constructor
      */
     public function __construct()
@@ -84,6 +91,7 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
         $this->description = $this->get_option('description');
         $this->enabled = $this->get_option('enabled');
         $this->testmode = 'yes' === $this->get_option('testmode');
+        $this->keep_cart = 'yes' === $this->get_option('keep_cart');
         $this->payment_type = $this->get_option('payment_type', 'one_phase');
         $this->debug_mode = 'yes' === $this->get_option('debug_mode');
 
@@ -101,11 +109,7 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
         add_action('woocommerce_api_inecobank-gateway', array($this->webhook, 'handle_webhook'));
         add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
 
-        // Admin settings validation
-        add_action('woocommerce_update_options_payment_gateways_' . $this->id, array(
-            $this,
-            'validate_admin_options'
-        ), 20);
+
     }
 
     /**
@@ -165,6 +169,14 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
                 'type' => 'checkbox',
                 'label' => __('Enable Test Mode', 'woo-inecobank-payment-gateway'),
                 'default' => 'yes',
+                'desc_tip' => true,
+            ],
+            'keep_cart' => [
+                'title' => __('Keep Cart Contents', 'woo-inecobank-payment-gateway'),
+                'type' => 'checkbox',
+                'label' => __('Do not clear cart on redirect', 'woo-inecobank-payment-gateway'),
+                'description' => __('If enabled, items will remain in the cart when the user is redirected to the payment page. Recommended to prevent empty carts if user clicks Back.', 'woo-inecobank-payment-gateway'),
+                'default' => 'no',
                 'desc_tip' => true,
             ],
             'debug_mode' => [
@@ -269,10 +281,21 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
             // Reduce stock levels
             wc_reduce_stock_levels($order_id);
 
-            // Remove cart
-            WC()->cart->empty_cart();
-
             $this->logger->log('Order registered successfully. Inecobank UUID: ' . $result['order_id'] . ', Order Number: ' . $order->get_order_number());
+
+            // Check if we should keep the cart contents
+            if ($this->keep_cart) {
+                // If keep_cart is enabled, we manually send the JSON response and exit
+                // to prevent WooCommerce from proceeding to empty the cart.
+                wp_send_json(array(
+                    'result' => 'success',
+                    'redirect' => $result['form_url'],
+                ));
+                exit;
+            }
+
+            // Remove cart (standard behavior)
+            WC()->cart->empty_cart();
 
             // Return redirect to payment page
             return array(

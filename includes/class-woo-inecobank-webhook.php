@@ -105,6 +105,14 @@ class Woo_Inecobank_Webhook
 
 		// Redirect to appropriate page based on order status
 		$redirect_url = $this->get_redirect_url($order);
+
+		// If order is paid/successful, ensure cart is empty
+		if ($order->has_status(array('processing', 'completed', 'on-hold'))) {
+			if (WC()->cart) {
+				WC()->cart->empty_cart();
+			}
+		}
+
 		$this->logger->log('Redirecting to: ' . $redirect_url);
 
 		wp_redirect($redirect_url);
