@@ -170,11 +170,32 @@ function woo_inecobank_plugin_activate()
 }
 
 /**
+ * Add custom cron schedule intervals
+ */
+add_filter('cron_schedules', 'woo_inecobank_cron_schedules');
+function woo_inecobank_cron_schedules($schedules)
+{
+	if (!isset($schedules['every_20_minutes'])) {
+		$schedules['every_20_minutes'] = array(
+			'interval' => 20 * 60, // 20 minutes in seconds
+			'display' => __('Every 20 Minutes', 'woo-inecobank-payment-gateway')
+		);
+	}
+	return $schedules;
+}
+
+/**
  * Plugin deactivation hook
  */
 register_deactivation_hook(__FILE__, 'woo_inecobank_plugin_deactivate');
 function woo_inecobank_plugin_deactivate()
 {
+	// Clear scheduled cron events
+	$timestamp = wp_next_scheduled('woo_inecobank_check_pending_orders');
+	if ($timestamp) {
+		wp_unschedule_event($timestamp, 'woo_inecobank_check_pending_orders');
+	}
+
 	// Cleanup tasks if needed
 	flush_rewrite_rules();
 }

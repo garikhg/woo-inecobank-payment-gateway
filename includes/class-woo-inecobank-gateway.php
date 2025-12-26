@@ -109,7 +109,13 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
         add_action('woocommerce_api_inecobank-gateway', array($this->webhook, 'handle_webhook'));
         add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
 
+        // Schedule automated order status check
+        add_action('woo_inecobank_check_pending_orders', array($this, 'check_pending_orders'));
 
+        // Register cron schedule on activation (if not already scheduled)
+        if (!wp_next_scheduled('woo_inecobank_check_pending_orders')) {
+            wp_schedule_event(time(), 'every_20_minutes', 'woo_inecobank_check_pending_orders');
+        }
     }
 
     /**
@@ -415,5 +421,87 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
         }
 
         return apply_filters('woocommerce_gateway_icon', $icon_html, $this->id);
+    }
+
+    /**
+     * Check pending orders and mark as failed if not paid after 20 minutes
+     */
+    public function check_pending_orders()
+    {
+        $this->logger->log('Running automated pending order status check');
+
+        // Get orders with 'pending' status that use Inecobank gateway
+        $pending_orders = wc_get_orders(array(
+            'status' => 'pending',
+            'payment_method' => 'inecobank',
+            'limit' => 50, // Process in batches
+            'orderby' => 'date',
+            'order' => 'ASC',
+        ));
+
+        if (empty($pending_orders)) {
+            $this->logger->log('No pending Inecobank orders found');
+            return;
+        }
+
+        $checked_count = 0;
+        $failed_count = 0;
+
+        foreach ($pending_orders as $order) {
+            // Check if order is older than 20 minutes
+            $order_created = $order->get_date_created();
+            $now = new WC_DateTime();
+            $time_diff = $now->getTimestamp() - $order_created->getTimestamp();
+
+            if ($time_diff < (20 * 60)) {
+                // Order is less than 20 minutes old, skip
+                continue;
+            }
+
+            $checked_count++;
+
+            // Get Inecobank UUID
+            $inecobank_uuid = $order->get_meta('_inecobank_uuid');
+
+            if (empty($inecobank_uuid)) {
+                // No UUID means order wasn't properly registered with Inecobank
+                $this->logger->log('Order #' . $order->get_id() . ' has no Inecobank UUID, marking as failed');
+                $order->update_status('failed', __('Payment not completed within 20 minutes. No payment UUID found.', 'woo-inecobank-payment-gateway'));
+                $failed_count++;
+                continue;
+            }
+
+            // Check status with Inecobank API
+            $status = $this->api->get_order_status($inecobank_uuid);
+
+            if ($status && isset($status['orderStatus'])) {
+                $order_status = (int) $status['orderStatus'];
+
+                // Status codes: 2 = Deposited (paid), 1 = Pre-authorized, 0 = Registered (not paid yet)
+                if ($order_status === 2 || $order_status === 1) {
+                    // Order is paid or pre-authorized, process it
+                    $this->logger->log('Order #' . $order->get_id() . ' is paid (status: ' . $order_status . ')');
+
+                    if ($order_status === 2) {
+                        $order->payment_complete($inecobank_uuid);
+                        $order->add_order_note(__('Payment verified via automated status check.', 'woo-inecobank-payment-gateway'));
+                    } elseif ($order_status === 1) {
+                        $order->update_status('on-hold', __('Payment pre-authorized via automated check.', 'woo-inecobank-payment-gateway'));
+                    }
+                } else {
+                    // Order is still unpaid after 20 minutes, mark as failed
+                    $this->logger->log('Order #' . $order->get_id() . ' not paid after 20 minutes (status: ' . $order_status . '), marking as failed');
+                    $order->update_status('failed', __('Payment not completed within 20 minutes.', 'woo-inecobank-payment-gateway'));
+                    $failed_count++;
+                }
+            } else {
+                // API check failed, mark as failed to be safe
+                $this->logger->log('API check failed for order #' . $order->get_id() . ', marking as failed', 'error');
+                $order->update_status('failed', __('Payment verification failed. Could not confirm payment status.', 'woo-inecobank-payment-gateway'));
+                $failed_count++;
+            }
+        }
+
+        $this->logger->log('Pending order check completed. Checked: ' . $checked_count . ', Failed: ' . $failed_count);
     }
 }
