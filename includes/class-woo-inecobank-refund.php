@@ -43,11 +43,12 @@ class Woo_Inecobank_Refund
 			return new WP_Error('error', __('Order not found.', 'woo-inecobank-payment-gateway'));
 		}
 
-		$inecobank_order_id = get_post_meta($order_id, '_inecobank_order_id', true);
-		if (!$inecobank_order_id) {
-			$this->logger->log('Refund failed: Inecobank order ID not found for order #' . $order_id, 'error');
+		// Get the Inecobank UUID (orderId) - required for refund.do API
+		$inecobank_uuid = $order->get_meta('_inecobank_uuid');
+		if (!$inecobank_uuid) {
+			$this->logger->log('Refund failed: Inecobank UUID not found for order #' . $order_id, 'error');
 
-			return new WP_Error('error', __('Inecobank order ID not found.', 'woo-inecobank-payment-gateway'));
+			return new WP_Error('error', __('Inecobank UUID not found. This order may not have been paid through Inecobank.', 'woo-inecobank-payment-gateway'));
 		}
 
 		// Validate refund amount
@@ -76,8 +77,8 @@ class Woo_Inecobank_Refund
 
 		$this->logger->log('Processing refund for order #' . $order_id . ', amount: ' . $amount . ', reason: ' . $reason);
 
-		// Process refund via API
-		$result = $this->api->process_refund($inecobank_order_id, $amount);
+		// Process refund via API using the UUID
+		$result = $this->api->process_refund($inecobank_uuid, $amount);
 		if ($result['success']) {
 			// Add order note
 			$order->add_order_note(
