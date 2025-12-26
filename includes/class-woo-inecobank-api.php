@@ -68,17 +68,21 @@ class Woo_Inecobank_API
 	 *
 	 * @param WC_Order $order Order object.
 	 * @param string $payment_type Payment type (one_phase or two_phase).
+	 * @param string|null $custom_order_number Optional custom order number to prevent duplicates.
 	 *
 	 * @return array
 	 */
-	public function register_order($order, $payment_type = 'one_phase'): array
+	public function register_order($order, $payment_type = 'one_phase', $custom_order_number = null): array
 	{
 		$endpoint = 'two_phase' === $payment_type ? 'registerPreAuth.do' : 'register.do';
+
+		// Use custom order number if provided, otherwise default to order number
+		$order_number = $custom_order_number ? $custom_order_number : $this->get_order_number($order);
 
 		$request_data = array(
 			'userName' => $this->credentials['username'],
 			'password' => $this->credentials['password'],
-			'orderNumber' => $this->get_order_number($order),
+			'orderNumber' => $order_number,
 			'amount' => $this->get_amount($order->get_total()),
 			'currency' => $this->get_currency_code($order->get_currency()),
 			'returnUrl' => $this->get_return_url(),

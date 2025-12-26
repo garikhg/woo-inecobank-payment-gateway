@@ -264,12 +264,16 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
 
         $this->logger->log('Processing payment for order #' . $order_id);
 
+        // Generate unique order number to avoid "Duplicate Order" errors on retry
+        // Append timestamp to ensure uniqueness (e.g. 12345-1678901234)
+        $unique_order_number = $order->get_order_number() . '-' . time();
+
         // Register order with Inecobank
-        $result = $this->api->register_order($order, $this->payment_type);
+        $result = $this->api->register_order($order, $this->payment_type, $unique_order_number);
 
         if ($result['success']) {
-            // Save the order number we sent to Inecobank (for webhook lookup)
-            $order->update_meta_data('_inecobank_order_id', $order->get_order_number());
+            // Save the unique order number we sent to Inecobank (for webhook lookup)
+            $order->update_meta_data('_inecobank_order_id', $unique_order_number);
             // Save the UUID returned by Inecobank (for API status checks)
             $order->update_meta_data('_inecobank_uuid', $result['order_id']);
             $order->update_meta_data('_inecobank_payment_type', $this->payment_type);
