@@ -17,6 +17,7 @@ The Inecobank Payment Gateway plugin allows you to accept payments directly on y
 - ✅ **Secure Payment Processing** - PCI-compliant through Inecobank
 - ✅ **Order Status Synchronization** - Automatic status updates
 - ✅ **Mobile Responsive** - Works on all devices
+- ✅ **Auto-Repair System** - Automatic metadata repair for order tracking
 
 ## Requirements
 
@@ -154,7 +155,9 @@ The plugin automatically converts WooCommerce currencies to Inecobank currency c
 4. Complete payment on Inecobank test page
 5. Verify order status updates correctly
 
-## API Endpoints
+## Technical Information
+
+### API Endpoints
 
 The plugin integrates with the following Inecobank API endpoints:
 
@@ -165,6 +168,35 @@ The plugin integrates with the following Inecobank API endpoints:
 - `reverse.do` - Reverse payments
 - `getOrderStatusExtended.do` - Check order status
 
+### Webhook System
+
+The plugin uses a smart webhook handler with auto-repair functionality:
+
+- **Multi-tier Order Lookup**: Finds orders using meta key, direct ID, or iteration
+- **Auto-Repair**: Automatically repairs missing metadata when orders are found
+- **Graceful Degradation**: Handles missing UUIDs without breaking checkout flow
+- **Comprehensive Logging**: Detailed logs for debugging (when debug mode enabled)
+
+#### Webhook URL
+
+```
+https://your-site.com/?wc-api=inecobank-gateway
+```
+
+This URL must be accessible for order status updates to work properly.
+
+### Order Metadata Structure
+
+Orders store the following metadata:
+
+- `_inecobank_order_id` - WooCommerce order number sent to Inecobank
+- `_inecobank_uuid` - Inecobank transaction UUID
+- `_inecobank_payment_type` - Payment type (one_phase/two_phase)
+- `_inecobank_auth_ref_num` - Bank terminal/reference number
+- `_inecobank_approval_code` - Payment approval code
+- `_inecobank_card_pan` - Masked card number
+- `_inecobank_transaction_date` - Transaction timestamp
+
 ## Security
 
 - All API credentials are securely stored
@@ -174,29 +206,31 @@ The plugin integrates with the following Inecobank API endpoints:
 
 ## Troubleshooting
 
-### Payment Failed
+### Enable Debug Logging
 
-**Problem:** Payment fails during checkout
+1. Go to **WooCommerce > Inecobank Logs**
+2. Enable **Debug Mode** in plugin settings
+3. Review logs for detailed information
+
+### Common Issues
+
+#### Payment Failed
 
 **Solutions:**
 - Verify API credentials are correct
 - Check if test mode is properly configured
 - Ensure SSL certificate is valid
-- Check WooCommerce error logs
+- Review Inecobank logs
 
-### Order Status Not Updating
-
-**Problem:** Order remains in "Pending" status
+#### Order Status Not Updating
 
 **Solutions:**
-- Verify return URL is accessible
-- Check webhook endpoint is not blocked
+- Verify webhook URL is accessible
+- Check that metadata is being saved correctly
 - Review WordPress/WooCommerce logs
 - Ensure proper API credentials
 
-### Refund Failed
-
-**Problem:** Refund cannot be processed
+#### Refund Failed
 
 **Solutions:**
 - Verify order was successfully paid
@@ -204,23 +238,12 @@ The plugin integrates with the following Inecobank API endpoints:
 - Ensure sufficient time has passed since payment
 - Verify API credentials have refund permissions
 
-### Connection Errors
+### Viewing Logs
 
-**Problem:** Cannot connect to Inecobank API
-
-**Solutions:**
-- Check server has outbound HTTPS access
-- Verify firewall settings
-- Test API credentials in Postman
-- Contact hosting provider
-
-## Logs
-
-Enable WooCommerce logging to debug issues:
-
-1. Go to **WooCommerce > Status > Logs**
-2. Look for logs starting with `inecobank-`
-3. Review error messages and API responses
+1. Go to **WooCommerce > Inecobank Logs**
+2. Select the log file to view
+3. Look for error messages and API responses
+4. Use log patterns to diagnose issues
 
 ## Frequently Asked Questions
 
@@ -262,7 +285,7 @@ For technical support and questions:
 
 ## Changelog
 
-### Version 1.0.0
+### Version 1.0.0 - 2024-12-26
 - Initial release
 - One-phase payment support
 - Two-phase payment support
@@ -270,6 +293,9 @@ For technical support and questions:
 - Multi-language support
 - Multi-currency support
 - Test mode
+- Auto-repair webhook system
+- Comprehensive logging
+- Enhanced order tracking
 
 ## Developer Documentation
 
@@ -279,35 +305,44 @@ For technical support and questions:
 
 ```php
 // Before payment processing
-do_action('inecobank_before_payment_process', $order_id);
+do_action('woo_inecobank_before_payment_process', $order_id);
 
 // After successful payment
-do_action('inecobank_payment_complete', $order_id, $transaction_id);
+do_action('woo_inecobank_payment_complete', $order_id, $inecobank_order_id);
 
 // After refund
-do_action('inecobank_refund_complete', $order_id, $refund_amount);
+do_action('woo_inecobank_refund_complete', $order_id, $refund_amount);
 ```
 
 #### Filters
 
 ```php
 // Modify API request data
-apply_filters('inecobank_payment_request_data', $data, $order);
+apply_filters('woo_inecobank_register_order_data', $data, $order);
 
 // Modify payment description
-apply_filters('inecobank_payment_description', $description, $order);
+apply_filters('woo_inecobank_payment_description', $description, $order);
 
 // Modify return URL
-apply_filters('inecobank_return_url', $url, $order);
+apply_filters('woo_inecobank_redirect_url', $url, $order);
+
+// Modify success URL
+apply_filters('woo_inecobank_success_url', $url, $order);
 ```
 
 ### Custom Integration Example
 
 ```php
 // Add custom data to payment request
-add_filter('inecobank_payment_request_data', function($data, $order) {
+add_filter('woo_inecobank_register_order_data', function($data, $order) {
     $data['customField'] = 'custom_value';
     return $data;
+}, 10, 2);
+
+// Custom handling after successful payment
+add_action('woo_inecobank_payment_complete', function($order_id, $inecobank_order_id) {
+    // Your custom code here
+    error_log("Payment completed for order #$order_id");
 }, 10, 2);
 ```
 
