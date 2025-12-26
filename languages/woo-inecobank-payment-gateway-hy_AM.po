@@ -1,0 +1,235 @@
+# Armenian (hy_AM) translation for Inecobank Payment Gateway
+# Copyright (C) 2025 Inecobank Payment Gateway for WooCommerce
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Inecobank Payment Gateway for WooCommerce 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/garikhg/woo-inecobank-payment-gateway/issues\n"
+"POT-Creation-Date: 2025-12-26 15:05:00+00:00\n"
+"PO-Revision-Date: 2025-12-26 15:05:00+0400\n"
+"Last-Translator: \n"
+"Language-Team: Armenian\n"
+"Language: hy_AM\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Inecobank Payment Gateway"
+msgstr "Ինեկոբանկ Վճարային Համակարգ"
+
+msgid "Accept payments via Inecobank Payment Gateway"
+msgstr "Ընդունել վճարումներ Ինեկոբանկ Վճարային Համակարգի միջոցով"
+
+msgid "Enable/Disable"
+msgstr "Միացնել/Անջատել"
+
+msgid "Enable Inecobank Payment Gateway"
+msgstr "Միացնել Ինեկոբանկ Վճարային Համակարգը"
+
+msgid "Title"
+msgstr "Վերնագիր"
+
+msgid "This controls the title which the user sees during checkout."
+msgstr "Սա վերնագիրն է, որը օգտատերը տեսնում է վճարման ժամանակ։"
+
+msgid "Credit/Debit Card"
+msgstr "Բանկային Քարտ"
+
+msgid "Description"
+msgstr "Նկարագրություն"
+
+msgid "Payment method description that the customer will see on your checkout."
+msgstr "Վճարման մեթոդի նկարագրությունը, որը հաճախորդը կտեսնի վճարման էջում։"
+
+msgid "Pay securely via Inecobank Payment Gateway."
+msgstr "Վճարեք ապահով՝ Ինեկոբանկ Վճարային Համակարգի միջոցով։"
+
+msgid "Test Mode"
+msgstr "Թեստային Ռեժիմ"
+
+msgid "Enable Test Mode"
+msgstr "Միացնել Թեստային Ռեժիմը"
+
+msgid "Keep Cart Contents"
+msgstr "Պահպանել Զամբյուղի Բովանդակությունը"
+
+msgid "Do not clear cart on redirect"
+msgstr "Չմաքրել զամբյուղը վերահղման ժամանակ"
+
+msgid "If enabled, items will remain in the cart when the user is redirected to the payment page. Recommended to prevent empty carts if user clicks Back."
+msgstr "Եթե միացված է, ապրանքները կմնան զամբյուղում, երբ օգտատերը վերահղվում է վճարման էջ։ Խորհուրդ է տրվում կանխելու համար դատարկ զամբյուղի առաջացումը, եթե օգտատերը սեղմի Հետ կոճակը։"
+
+msgid "Debug Mode"
+msgstr "Վրիպազերծման Ռեժիմ"
+
+msgid "Enable Debug Mode"
+msgstr "Միացնել Վրիպազերծման Ռեժիմը"
+
+msgid "Save debug messages to log file."
+msgstr "Պահպանել վրիպազերծման հաղորդագրությունները լոգ ֆայլում։"
+
+msgid "Payment Type"
+msgstr "Վճարման Տեսակ"
+
+msgid "Choose between one-phase (immediate) or two-phase (preauth) payment."
+msgstr "Ընտրեք մեկ փուլային (ակնթարթային) կամ երկու փուլային (նախավճար) վճարումը։"
+
+msgid "One Phase"
+msgstr "Մեկ Փուլ"
+
+msgid "Two Phase"
+msgstr "Երկու Փուլ"
+
+msgid "Live API Username"
+msgstr "Գործող API Օգտատերի անուն"
+
+msgid "Get your API credentials from Inecobank."
+msgstr "Ստացեք ձեր API տվյալները Ինեկոբանկից։"
+
+msgid "Live API Password"
+msgstr "Գործող API Գաղտնաբառ"
+
+msgid "Test API Username"
+msgstr "Թեստային API Օգտատերի անուն"
+
+msgid "Test API Password"
+msgstr "Թեստային API Գաղտնաբառ"
+
+msgid "Language"
+msgstr "Լեզու"
+
+msgid "Language for the payment page."
+msgstr "Վճարման էջի լեզուն։"
+
+msgid "Armenian"
+msgstr "Հայերեն"
+
+msgid "English"
+msgstr "Անգլերեն"
+
+msgid "Russian"
+msgstr "Ռուսերեն"
+
+msgid "Invalid order. Please try again."
+msgstr "Անվավեր պատվեր։ Խնդրում ենք փորձել կրկին։"
+
+msgid "Awaiting Inecobank payment"
+msgstr "Սպասվում է Ինեկոբանկի վճարումը"
+
+msgid "Payment error occurred. Please try again."
+msgstr "Վճարման սխալ է տեղի ունեցել։ Խնդրում ենք փորձել կրկին։"
+
+msgid "Thank you for your order, please click the button below to pay with Inecobank."
+msgstr "Շնորհակալություն պատվերի համար, խնդրում ենք սեղմել ստորև կոճակը՝ Ինեկոբանկով վճարելու համար։"
+
+msgid "Inecobank Payment Gateway is not available. Your store currency is not supported."
+msgstr "Ինեկոբանկ Վճարային Համակարգը հասանելի չէ։ Ձեր խանութի արժույթը չի աջակցվում։"
+
+msgid "Payment not completed within 20 minutes. No payment UUID found."
+msgstr "Վճարումը չի ավարտվել 20 րոպեում։ Վճարման UUID-ը չի գտնվել։"
+
+msgid "Payment verified via automated status check."
+msgstr "Վճարումը հաստատվել է ավտոմատ ստուգման միջոցով։"
+
+msgid "Payment pre-authorized via automated check."
+msgstr "Վճարումը նախավճարված է ավտոմատ ստուգման միջոցով։"
+
+msgid "Payment not completed within 20 minutes."
+msgstr "Վճարումը չի ավարտվել 20 րոպեում։"
+
+msgid "Payment verification failed. Could not confirm payment status."
+msgstr "Վճարման ստուգումը ձախողվեց։ Հնարավոր չէ հաստատել վճարման կարգավիճակը։"
+
+msgid "Order not found."
+msgstr "Պատվերը չի գտնվել։"
+
+msgid "Inecobank UUID not found. This order may not have been paid through Inecobank."
+msgstr "Ինեկոբանկ UUID-ը չի գտնվել։ Հնարավոր է այս պատվերը վճարված չլինի Ինեկոբանկի միջոցով։"
+
+msgid "Invalid refund amount."
+msgstr "Անվավեր վերադարձի գումար։"
+
+msgid "Order must be paid before refunding."
+msgstr "Պատվերը պետք է վճարված լինի մինչև վերադարձը։"
+
+msgid "Refund amount exceeds order total."
+msgstr "Վերադարձի գումարը գերազանցում է պատվերի ընդհանուրը։"
+
+msgid "Refunded %s via Inecobank. Reason: %s"
+msgstr "Վերադարձվել է %s՝ Ինեկոբանկի միջոցով։ Պատճառ՝ %s"
+
+msgid "Inecobank refund failed: %s"
+msgstr "Ինեկոբանկի վերադարձը ձախողվեց՝ %s"
+
+msgid "Customer returned from Inecobank payment page. UUID was not found - please verify payment status manually in Inecobank dashboard."
+msgstr "Հաճախորդը վերադարձել է Ինեկոբանկի վճարման էջից։ UUID-ը չի գտնվել - խնդրում ենք ստուգել վճարման կարգավիճակը Ինեկոբանկի վահանակում։"
+
+msgid "Payment successful."
+msgstr "Վճարումը հաջող է։"
+
+msgid "Payment pre-authorized. Please capture the payment manually."
+msgstr "Վճարումը նախավճարված է։ Խնդրում ենք ձեռքով հաստատել վճարումը։"
+
+msgid "Payment was declined or cancelled."
+msgstr "Վճարումը մերժվել կամ չեղարկվել է։"
+
+msgid "Payment has been refunded."
+msgstr "Վճարումը վերադարձվել է։"
+
+msgid "Refund failed."
+msgstr "Վերադարձը ձախողվեց։"
+
+msgid "Reverse failed."
+msgstr "Հակադարձումը ձախողվեց։"
+
+msgid "Inecobank Logs"
+msgstr "Ինեկոբանկ Լոգեր"
+
+msgid "Settings"
+msgstr "Կարգավորումներ"
+
+msgid "Support"
+msgstr "Աջակցություն"
+
+msgid "Inecobank Payment Gateway is enabled but not configured. Please enter your API credentials."
+msgstr "Ինեկոբանկ Վճարային Համակարգը միացված է, բայց կարգավորված չէ։ Խնդրում ենք մուտքագրել ձեր API տվյալները։"
+
+msgid "Configure"
+msgstr "Կարգավորել"
+
+msgid "Log file deleted successfully."
+msgstr "Լոգ ֆայլը հաջողությամբ ջնջվել է։"
+
+msgid "Failed to delete log file."
+msgstr "Լոգ ֆայլը ջնջելը ձախողվեց։"
+
+msgid "All logs cleared successfully."
+msgstr "Բոլոր լոգերը հաջողությամբ մաքրվել են։"
+
+msgid "Inecobank Payment Gateway Logs"
+msgstr "Ինեկոբանկ Վճարային Համակարգի Լոգեր"
+
+msgid "Clear All Logs"
+msgstr "Մաքրել Բոլոր Լոգերը"
+
+msgid "Are you sure you want to clear all logs?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք մաքրել բոլոր լոգերը։"
+
+msgid "No logs found."
+msgstr "Լոգեր չեն գտնվել։"
+
+msgid "Toggle panel"
+msgstr "Փոխարկել վահանակը"
+
+msgid "Delete"
+msgstr "Ջնջել"
+
+msgid "Are you sure you want to delete this log file?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք ջնջել այս լոգ ֆայլը։"
+
+msgid "Every 20 Minutes"
+msgstr "Ամեն 20 րոպեն մեկ"
+
+msgid "WooCommerce is not active. Inecobank Payment Gateway requires WooCommerce to be installed and active."
+msgstr "WooCommerce-ը ակտիվ չէ։ Ինեկոբանկ Վճարային Համակարգը պահանջում է, որ WooCommerce-ը տեղադրված և ակտիվ լինի։"

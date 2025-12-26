@@ -1,0 +1,235 @@
+# Russian (ru_RU) translation for Inecobank Payment Gateway
+# Copyright (C) 2025 Inecobank Payment Gateway for WooCommerce
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Inecobank Payment Gateway for WooCommerce 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/garikhg/woo-inecobank-payment-gateway/issues\n"
+"POT-Creation-Date: 2025-12-26 15:05:00+00:00\n"
+"PO-Revision-Date: 2025-12-26 15:05:00+0400\n"
+"Last-Translator: \n"
+"Language-Team: Russian\n"
+"Language: ru_RU\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+msgid "Inecobank Payment Gateway"
+msgstr "Платежный шлюз Инекобанк"
+
+msgid "Accept payments via Inecobank Payment Gateway"
+msgstr "Принимать платежи через платежный шлюз Инекобанк"
+
+msgid "Enable/Disable"
+msgstr "Включить/Отключить"
+
+msgid "Enable Inecobank Payment Gateway"
+msgstr "Включить платежный шлюз Инекобанк"
+
+msgid "Title"
+msgstr "Название"
+
+msgid "This controls the title which the user sees during checkout."
+msgstr "Это название, которое пользователь видит при оформлении заказа."
+
+msgid "Credit/Debit Card"
+msgstr "Банковская карта"
+
+msgid "Description"
+msgstr "Описание"
+
+msgid "Payment method description that the customer will see on your checkout."
+msgstr "Описание способа оплаты, которое клиент увидит при оформлении заказа."
+
+msgid "Pay securely via Inecobank Payment Gateway."
+msgstr "Оплатите безопасно через платежный шлюз Инекобанк."
+
+msgid "Test Mode"
+msgstr "Тестовый режим"
+
+msgid "Enable Test Mode"
+msgstr "Включить тестовый режим"
+
+msgid "Keep Cart Contents"
+msgstr "Сохранить содержимое корзины"
+
+msgid "Do not clear cart on redirect"
+msgstr "Не очищать корзину при перенаправлении"
+
+msgid "If enabled, items will remain in the cart when the user is redirected to the payment page. Recommended to prevent empty carts if user clicks Back."
+msgstr "Если включено, товары останутся в корзине при перенаправлении пользователя на страницу оплаты. Рекомендуется для предотвращения пустой корзины, если пользователь нажмет Назад."
+
+msgid "Debug Mode"
+msgstr "Режим отладки"
+
+msgid "Enable Debug Mode"
+msgstr "Включить режим отладки"
+
+msgid "Save debug messages to log file."
+msgstr "Сохранять отладочные сообщения в лог-файл."
+
+msgid "Payment Type"
+msgstr "Тип платежа"
+
+msgid "Choose between one-phase (immediate) or two-phase (preauth) payment."
+msgstr "Выберите между одно-этапным (немедленным) или двух-этапным (предавторизация) платежом."
+
+msgid "One Phase"
+msgstr "Один этап"
+
+msgid "Two Phase"
+msgstr "Два этапа"
+
+msgid "Live API Username"
+msgstr "Имя пользователя API (рабочий)"
+
+msgid "Get your API credentials from Inecobank."
+msgstr "Получите свои учетные данные API в Инекобанке."
+
+msgid "Live API Password"
+msgstr "Пароль API (рабочий)"
+
+msgid "Test API Username"
+msgstr "Имя пользователя API (тестовый)"
+
+msgid "Test API Password"
+msgstr "Пароль API (тестовый)"
+
+msgid "Language"
+msgstr "Язык"
+
+msgid "Language for the payment page."
+msgstr "Язык страницы оплаты."
+
+msgid "Armenian"
+msgstr "Армянский"
+
+msgid "English"
+msgstr "Английский"
+
+msgid "Russian"
+msgstr "Русский"
+
+msgid "Invalid order. Please try again."
+msgstr "Недействительный заказ. Пожалуйста, попробуйте еще раз."
+
+msgid "Awaiting Inecobank payment"
+msgstr "Ожидание платежа Инекобанк"
+
+msgid "Payment error occurred. Please try again."
+msgstr "Произошла ошибка платежа. Пожалуйста, попробуйте еще раз."
+
+msgid "Thank you for your order, please click the button below to pay with Inecobank."
+msgstr "Спасибо за ваш заказ, пожалуйста, нажмите кнопку ниже, чтобы оплатить через Инекобанк."
+
+msgid "Inecobank Payment Gateway is not available. Your store currency is not supported."
+msgstr "Платежный шлюз Инекобанк недоступен. Валюта вашего магазина не поддерживается."
+
+msgid "Payment not completed within 20 minutes. No payment UUID found."
+msgstr "Платеж не завершен в течение 20 минут. UUID платежа не найден."
+
+msgid "Payment verified via automated status check."
+msgstr "Платеж проверен автоматической проверкой статуса."
+
+msgid "Payment pre-authorized via automated check."
+msgstr "Платеж предавторизован автоматической проверкой."
+
+msgid "Payment not completed within 20 minutes."
+msgstr "Платеж не завершен в течение 20 минут."
+
+msgid "Payment verification failed. Could not confirm payment status."
+msgstr "Проверка платежа не удалась. Не удалось подтвердить статус платежа."
+
+msgid "Order not found."
+msgstr "Заказ не найден."
+
+msgid "Inecobank UUID not found. This order may not have been paid through Inecobank."
+msgstr "UUID Инекобанк не найден. Возможно, этот заказ не был оплачен через Инекобанк."
+
+msgid "Invalid refund amount."
+msgstr "Неверная сумма возврата."
+
+msgid "Order must be paid before refunding."
+msgstr "Заказ должен быть оплачен перед возвратом."
+
+msgid "Refund amount exceeds order total."
+msgstr "Сумма возврата превышает общую сумму заказа."
+
+msgid "Refunded %s via Inecobank. Reason: %s"
+msgstr "Возвращено %s через Инекобанк. Причина: %s"
+
+msgid "Inecobank refund failed: %s"
+msgstr "Возврат Инекобанк не удался: %s"
+
+msgid "Customer returned from Inecobank payment page. UUID was not found - please verify payment status manually in Inecobank dashboard."
+msgstr "Клиент вернулся со страницы оплаты Инекобанк. UUID не найден - пожалуйста, проверьте статус платежа вручную в панели Инекобанк."
+
+msgid "Payment successful."
+msgstr "Платеж успешен."
+
+msgid "Payment pre-authorized. Please capture the payment manually."
+msgstr "Платеж предавторизован. Пожалуйста, подтвердите платеж вручную."
+
+msgid "Payment was declined or cancelled."
+msgstr "Платеж был отклонен или отменен."
+
+msgid "Payment has been refunded."
+msgstr "Платеж был возвращен."
+
+msgid "Refund failed."
+msgstr "Возврат не удался."
+
+msgid "Reverse failed."
+msgstr "Отмена не удалась."
+
+msgid "Inecobank Logs"
+msgstr "Логи Инекобанк"
+
+msgid "Settings"
+msgstr "Настройки"
+
+msgid "Support"
+msgstr "Поддержка"
+
+msgid "Inecobank Payment Gateway is enabled but not configured. Please enter your API credentials."
+msgstr "Платежный шлюз Инекобанк включен, но не настроен. Пожалуйста, введите свои учетные данные API."
+
+msgid "Configure"
+msgstr "Настроить"
+
+msgid "Log file deleted successfully."
+msgstr "Лог-файл успешно удален."
+
+msgid "Failed to delete log file."
+msgstr "Не удалось удалить лог-файл."
+
+msgid "All logs cleared successfully."
+msgstr "Все логи успешно очищены."
+
+msgid "Inecobank Payment Gateway Logs"
+msgstr "Логи платежного шлюза Инекобанк"
+
+msgid "Clear All Logs"
+msgstr "Очистить все логи"
+
+msgid "Are you sure you want to clear all logs?"
+msgstr "Вы уверены, что хотите очистить все логи?"
+
+msgid "No logs found."
+msgstr "Логи не найдены."
+
+msgid "Toggle panel"
+msgstr "Переключить панель"
+
+msgid "Delete"
+msgstr "Удалить"
+
+msgid "Are you sure you want to delete this log file?"
+msgstr "Вы уверены, что хотите удалить этот лог-файл?"
+
+msgid "Every 20 Minutes"
+msgstr "Каждые 20 минут"
+
+msgid "WooCommerce is not active. Inecobank Payment Gateway requires WooCommerce to be installed and active."
+msgstr "WooCommerce неактивен. Платежный шлюз Инекобанк требует установки и активации WooCommerce."
