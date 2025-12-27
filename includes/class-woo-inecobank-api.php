@@ -3,7 +3,7 @@
  * Inecobank API Handler
  *
  * @package WooCommerce Inecobank Payment Gateway
- * @version 1.1.6
+ * @version 1.1.7
  */
 
 if (!defined('ABSPATH')) {
@@ -327,10 +327,12 @@ class Woo_Inecobank_API
 
 			$args = array(
 				'method' => 'POST',
-				'headers' => array(), // Let WP handle headers, match reference plugin
+				'headers' => array(
+					'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
+				),
 				'body' => $request_data,
 				'timeout' => $timeout,
-				'sslverify' => false, // Match reference plugin behavior for stability
+				'sslverify' => false,
 				'httpversion' => '1.1',
 				'redirection' => 0,
 				'blocking' => true,
@@ -338,6 +340,11 @@ class Woo_Inecobank_API
 
 			// Allow filtering of request args
 			$args = apply_filters('woo_inecobank_request_args', $args, $endpoint);
+
+			// Force IPv4 to prevent IPv6 timeouts
+			add_action('http_api_curl', function ($handle) {
+				curl_setopt($handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+			});
 
 			$response = wp_remote_post($url, $args);
 
