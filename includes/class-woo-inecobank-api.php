@@ -89,11 +89,7 @@ class Woo_Inecobank_API
 			'description' => $this->get_order_description($order),
 			'language' => $this->credentials['language'],
 			'pageView' => 'DESKTOP',
-			'clientId' => $this->get_client_id($order),
-			'jsonParams' => json_encode(array(
-				'orderNumber' => $order->get_order_number(),
-				'orderId' => $order->get_id(),
-			)),
+			'jsonParams' => '{"FORCE_3DS2":"true"}',
 		);
 
 		// Add optional fields
