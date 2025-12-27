@@ -5,7 +5,7 @@ Tags: payment gateway, inecobank, armenia, woocommerce, payment, credit card, de
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.2
-Stable tag: 1.1.4
+Stable tag: 1.1.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -285,6 +285,15 @@ Yes, but Inecobank primarily serves Armenian businesses. If you're outside Armen
 
 == Changelog ==
 
+= 1.1.6 - 2025-12-27 =
+* **Performance**
+* ✅ Reverted to standard WordPress timeout handling (15s) to prevent 504 Gateway Timeouts
+* ✅ Removed custom cURL hook injection for better server compatibility
+
+= 1.1.5 - 2025-12-27 =
+* **Tweaks**
+* ✅ Adjusted default API timeout to 30 seconds for better balance between reliability and speed
+
 = 1.1.4 - 2025-12-27 =
 * **Critical Fixes**
 * ✅ Fixed API request parameters: Set `jsonParams` to `FORCE_3DS2` for compliance
@@ -361,6 +370,12 @@ Yes, but Inecobank primarily serves Armenian businesses. If you're outside Armen
 * ✅ PHP 7.2+ support
 
 == Upgrade Notice ==
+
+= 1.1.6 =
+Stability fix. Addressed 504 Gateway errors by aligning timeout logic with server constraints.
+
+= 1.1.5 =
+Adjustment. Reduced default API timeout to 30s.
 
 = 1.1.4 =
 Critical API fix. Updates request parameters to strictly match Inecobank requirements (3DS2 enforcement).
