@@ -3,7 +3,7 @@
  * Inecobank API Handler
  *
  * @package WooCommerce Inecobank Payment Gateway
- * @version 1.1.0
+ * @version 1.1.2
  */
 
 if (!defined('ABSPATH')) {
@@ -26,7 +26,7 @@ class Woo_Inecobank_API
 	/**
 	 * API Timeout in seconds
 	 */
-	const API_TIMEOUT = 45;
+	const API_TIMEOUT = 60;
 
 	/**
 	 * API credentials
@@ -346,7 +346,17 @@ class Woo_Inecobank_API
 			// Allow filtering of request args
 			$args = apply_filters('woo_inecobank_request_args', $args, $endpoint);
 
+			// Define cURL configuration callback
+			$curl_callback = function ($handle) use ($timeout) {
+				curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, (int) $timeout);
+				curl_setopt($handle, CURLOPT_TIMEOUT, (int) $timeout);
+			};
+
+			add_action('http_api_curl', $curl_callback);
+
 			$response = wp_remote_post($url, $args);
+
+			remove_action('http_api_curl', $curl_callback);
 
 			if (is_wp_error($response)) {
 				$error_message = $response->get_error_message();
