@@ -26,7 +26,7 @@ class Woo_Inecobank_API
 	/**
 	 * API Timeout in seconds
 	 */
-	const API_TIMEOUT = 60;
+	const API_TIMEOUT = 30;
 
 	/**
 	 * API credentials
