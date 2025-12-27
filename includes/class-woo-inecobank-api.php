@@ -3,7 +3,7 @@
  * Inecobank API Handler
  *
  * @package WooCommerce Inecobank Payment Gateway
- * @version 1.1.2
+ * @version 1.1.3
  */
 
 if (!defined('ABSPATH')) {
@@ -331,15 +331,12 @@ class Woo_Inecobank_API
 
 			$args = array(
 				'method' => 'POST',
-				'headers' => array(
-					'Content-Type' => 'application/x-www-form-urlencoded',
-					'Connection' => 'close', // Prevent keep-alive issues
-				),
+				'headers' => array(), // Let WP handle headers, match reference plugin
 				'body' => $request_data,
 				'timeout' => $timeout,
-				'sslverify' => !$this->testmode, // Disable SSL verification in test mode
+				'sslverify' => false, // Match reference plugin behavior for stability
 				'httpversion' => '1.1',
-				'redirection' => 0, // Don't follow redirects
+				'redirection' => 0,
 				'blocking' => true,
 			);
 
