@@ -3,7 +3,7 @@
  * Inecobank API Handler
  *
  * @package WooCommerce Inecobank Payment Gateway
- * @version 1.1.9
+ * @version 1.1.10
  */
 
 if (!defined('ABSPATH')) {

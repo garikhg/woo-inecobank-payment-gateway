@@ -18,7 +18,7 @@ if (!current_user_can('manage_options')) {
 echo '<h1>Inecobank Connection Diagnostics</h1>';
 
 $test_url = 'https://pg.inecoecom.am/payment/rest/';
-$test_timeout = 30;
+$test_timeout = 60;
 
 echo '<h2>1. DNS Resolution Test</h2>';
 $host = 'pg.inecoecom.am';
@@ -109,7 +109,7 @@ if ($stream) {
 
 echo '<h2>7. Server Outbound Firewall Check</h2>';
 echo '<p>Testing if server can make HTTPS connections to external sites...</p>';
-$external_test = wp_remote_get('https://www.google.com', array('timeout' => 10));
+$external_test = wp_remote_get('https://www.google.com', array('timeout' => 60));
 if (is_wp_error($external_test)) {
     echo '<p style="color: red;">❌ Cannot connect to external HTTPS sites</p>';
     echo '<p>Your server may have outbound firewall restrictions</p>';
