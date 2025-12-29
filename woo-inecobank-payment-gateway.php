@@ -3,7 +3,7 @@
  * Plugin Name: Inecobank Payment Gateway for WooCommerce
  * Plugin URI: https://github.com/garikhg/woo-inecobank-payment-gateway
  * Description: Accept payments via Inecobank Payment Gateway
- * Version: 1.1.8
+ * Version: 1.1.9
  * Author: Garegin Hakobyan
  * Author URI: https://github.com/garikhg
  * Text Domain: woo-inecobank-payment-gateway
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('WOO_INECOBANK_PLUGIN_VERSION', '1.1.8');
+define('WOO_INECOBANK_PLUGIN_VERSION', '1.1.9');
 define('WOO_INECOBANK_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WOO_INECOBANK_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('WOO_INECOBANK_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -79,7 +79,13 @@ function woo_inecobank_payment_gateway_init()
 				require_once WOO_INECOBANK_PLUGIN_DIR . 'admin/diagnostics.php';
 				exit;
 			}
+
+			if (isset($_GET['woo_inecobank_curl_diagnostics']) && current_user_can('manage_options')) {
+				require_once WOO_INECOBANK_PLUGIN_DIR . 'admin/curl-diagnostics.php';
+				exit;
+			}
 		});
+
 	}
 
 	// Add the gateway to WooCommerce
@@ -190,6 +196,7 @@ function woo_inecobank_cron_schedules($schedules)
 			'display' => __('Every 20 Minutes', 'woo-inecobank-payment-gateway')
 		);
 	}
+
 	return $schedules;
 }
 
@@ -208,3 +215,12 @@ function woo_inecobank_plugin_deactivate()
 	// Cleanup tasks if needed
 	flush_rewrite_rules();
 }
+
+/**
+ * Custom HTTP Request Timeout
+ */
+function custom_http_request_timeout()
+{
+	return 15;
+}
+add_filter('http_request_timeout', 'custom_http_request_timeout');

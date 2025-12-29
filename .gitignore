@@ -37,3 +37,4 @@ composer.lock
 # Development and testing
 .phpunit.result.cache
 phpunit.xml
+*.zip
