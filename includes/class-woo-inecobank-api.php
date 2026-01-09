@@ -3,7 +3,7 @@
  * Inecobank API Handler
  *
  * @package WooCommerce Inecobank Payment Gateway
- * @version 1.1.13
+ * @version 1.1.15
  */
 
 if (!defined('ABSPATH')) {
@@ -26,7 +26,7 @@ class Woo_Inecobank_API
 	/**
 	 * API Timeout in seconds
 	 */
-	const API_TIMEOUT = 15;
+	const API_TIMEOUT = 60;
 
 	/**
 	 * API credentials
@@ -50,6 +50,13 @@ class Woo_Inecobank_API
 	private $logger;
 
 	/**
+	 * Request timeout for curl operations
+	 *
+	 * @var int
+	 */
+	private $request_timeout = 60;
+
+	/**
 	 * Constructor
 	 *
 	 * @param array $credentials API credentials.
@@ -61,6 +68,20 @@ class Woo_Inecobank_API
 		$this->credentials = $credentials;
 		$this->testmode = $testmode;
 		$this->logger = $logger;
+	}
+
+	/**
+	 * Set cURL timeout options
+	 *
+	 * @param resource $handle cURL handle.
+	 */
+	public function set_curl_timeout($handle)
+	{
+		// Set connection timeout to 30 seconds, total timeout to request_timeout
+		curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, 30);
+		curl_setopt($handle, CURLOPT_CONNECTTIMEOUT_MS, 30000);
+		curl_setopt($handle, CURLOPT_TIMEOUT, $this->request_timeout);
+		curl_setopt($handle, CURLOPT_TIMEOUT_MS, $this->request_timeout * 1000);
 	}
 
 	/**
@@ -117,6 +138,7 @@ class Woo_Inecobank_API
 		} else {
 			$error_message = $this->get_error_message($response);
 			$this->logger->error('Order registration failed: ' . $error_message);
+			$this->logger->log('Full error response: ' . wp_json_encode($response), 'error');
 
 			return array(
 				'success' => false,
@@ -318,6 +340,12 @@ class Woo_Inecobank_API
 		$attempt = 0;
 		$last_error = null;
 
+		// Store timeout for curl callback
+		$this->request_timeout = $timeout;
+
+		// Add filter to set curl options for connection timeout
+		add_action('http_api_curl', array($this, 'set_curl_timeout'), 10, 1);
+
 		while ($attempt < $max_attempts) {
 			$attempt++;
 
@@ -329,7 +357,7 @@ class Woo_Inecobank_API
 				'method' => 'POST',
 				'headers' => array(),
 				'body' => $request_data,
-				'timeout' => 15, // Match working plugin
+				'timeout' => 60, // Increased from 15 to 60 seconds for better reliability
 				'sslverify' => false,
 				'httpversion' => '1.1',
 				'redirection' => 5,
@@ -374,6 +402,9 @@ class Woo_Inecobank_API
 			// Success - break out of retry loop
 			break;
 		}
+
+		// Remove the curl filter we added
+		remove_action('http_api_curl', array($this, 'set_curl_timeout'), 10);
 
 		// Restore original timeout
 		ini_set('default_socket_timeout', $original_timeout);

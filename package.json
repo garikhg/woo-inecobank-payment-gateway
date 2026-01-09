@@ -1,6 +1,6 @@
 {
   "name": "woo-inecobank-payment-gateway",
-  "version": "1.1.13",
+  "version": "1.1.15",
   "description": "Accept credit and debit card payments on your WooCommerce store using Inecobank Payment Gateway.",
   "main": "index.js",
   "scripts": {

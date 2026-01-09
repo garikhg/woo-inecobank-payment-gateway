@@ -322,8 +322,18 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway {
                     'redirect' => $result['form_url'],
             );
         } else {
+            // Get error message with proper handling for timeout errors
             $error_message = $result['error_message'] ?? __( 'Payment error occurred. Please try again.', 'woo-inecobank-payment-gateway' );
-            $this->logger->error( 'Payment registration failed for order #' . $order_id . ': ' . $error_message );
+            $error_code = $result['error_code'] ?? 'unknown';
+
+            // Add more specific error handling for common issues
+            if ( strpos( $error_message, 'Timeout' ) !== false || strpos( $error_message, 'timeout' ) !== false ) {
+                $error_message = __( 'Payment gateway connection timeout. Please try again in a few moments.', 'woo-inecobank-payment-gateway' );
+            } elseif ( strpos( $error_message, 'Failed to connect' ) !== false ) {
+                $error_message = __( 'Unable to connect to payment gateway. Please check your internet connection and try again.', 'woo-inecobank-payment-gateway' );
+            }
+
+            $this->logger->error( 'Payment registration failed for order #' . $order_id . ': ' . $error_message . ' (Error Code: ' . $error_code . ')' );
 
             wc_add_notice( $error_message, 'error' );
 
