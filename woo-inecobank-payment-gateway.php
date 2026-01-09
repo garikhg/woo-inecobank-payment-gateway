@@ -30,7 +30,6 @@ define('WOO_INECOBANK_PLUGIN_BASENAME', plugin_basename(__FILE__));
  * Check if WooCommerce is active
  */
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
-	// add_action( 'admin_notices', 'woocommerce_required_notice' );
 	add_action('admin_notices', 'woo_inecobank_woocommerce_missing_notice');
 
 	return;
