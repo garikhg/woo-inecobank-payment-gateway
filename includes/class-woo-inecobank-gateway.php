@@ -126,6 +126,9 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
         // Schedule automated order status check
         add_action('woo_inecobank_check_pending_orders', array($this, 'check_pending_orders'));
 
+        // Automatic stock restoration when order status changes to Failed or Cancelled
+        add_action('woocommerce_order_status_changed', array($this, 'handle_order_status_change'), 10, 4);
+
         // Register cron schedule on activation (if not already scheduled)
         if (!wp_next_scheduled('woo_inecobank_check_pending_orders')) {
             wp_schedule_event(time(), 'every_20_minutes', 'woo_inecobank_check_pending_orders');
@@ -540,6 +543,44 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
         }
 
         $this->logger->log('Pending order check completed. Checked: ' . $checked_count . ', Failed: ' . $failed_count);
+    }
+
+    /**
+     * Handle order status changes - Automatically restore stock when Failed or Cancelled
+     *
+     * @param int $order_id Order ID.
+     * @param string $old_status Old order status.
+     * @param string $new_status New order status.
+     * @param WC_Order $order Order object.
+     *
+     * @return void
+     */
+    public function handle_order_status_change($order_id, $old_status, $new_status, $order)
+    {
+        // Only process Inecobank orders
+        if ($order->get_payment_method() !== 'inecobank') {
+            return;
+        }
+
+        // Only restore stock when transitioning TO failed or cancelled
+        if (!in_array($new_status, array('failed', 'cancelled'), true)) {
+            return;
+        }
+
+        // Don't restore if transitioning FROM failed or cancelled (already restored)
+        if (in_array($old_status, array('failed', 'cancelled'), true)) {
+            return;
+        }
+
+        $this->logger->log(sprintf(
+            'Order #%d status changed from %s to %s - triggering automatic stock restoration',
+            $order_id,
+            $old_status,
+            $new_status
+        ));
+
+        // Restore stock
+        $this->restore_order_stock($order);
     }
 
     /**
