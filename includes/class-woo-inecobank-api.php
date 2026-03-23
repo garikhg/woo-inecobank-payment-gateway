@@ -129,14 +129,21 @@ class Woo_Inecobank_API
 		$response = $this->send_request($endpoint, $request_data);
 
 		// Check for successful registration
-		if (isset($response['errorCode']) && 0 === (int) $response['errorCode'] && isset($response['formUrl'])) {
+		if (isset($response['errorCode']) && 0 === (int) $response['errorCode'] && !empty($response['formUrl'])) {
 			return array(
 				'success' => true,
-				'order_id' => $response['orderId'],
+				'order_id' => $response['orderId'] ?? ($response['orderNumber'] ?? ''),
 				'form_url' => $response['formUrl'],
 			);
 		} else {
 			$error_message = $this->get_error_message($response);
+
+			// If errorCode is 0 but formUrl is missing, it's still a failure
+			if (isset($response['errorCode']) && 0 === (int) $response['errorCode'] && empty($response['formUrl'])) {
+				$error_message = __('Payment registration succeeded but no redirect URL was provided.', 'woo-inecobank-payment-gateway');
+			}
+
+			$this->logger->error('Order registration failed: ' . $error_message);
 			$this->logger->error('Order registration failed: ' . $error_message);
 			$this->logger->log('Full error response: ' . wp_json_encode($response), 'error');
 
@@ -424,9 +431,12 @@ class Woo_Inecobank_API
 		$this->logger->log('API response (HTTP ' . $status_code . '): ' . $body);
 
 		if (!$result || !is_array($result)) {
+			// Handle cases where the body is not JSON or is empty
+			$this->logger->error('Invalid response format or empty body (HTTP ' . $status_code . ')');
+
 			return array(
 				'errorCode' => '999',
-				'errorMessage' => __('Invalid response from payment gateway.', 'woo-inecobank-payment-gateway'),
+				'errorMessage' => sprintf(__('Invalid response from payment gateway (HTTP %d).', 'woo-inecobank-payment-gateway'), $status_code),
 			);
 		}
 

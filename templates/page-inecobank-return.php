@@ -49,58 +49,63 @@ $is_success = '0' === $response_code || 'success' === strtolower($description);
     <div class="inecobank-processing-container">
 
         <?php if ($is_success): ?>
-            <!-- Success Processing -->
-            <div class="inecobank-processing-success">
-                <div class="inecobank-spinner">
-                    <svg class="inecobank-checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                        <circle class="inecobank-checkmark-circle" cx="26" cy="26" r="25" fill="none" />
-                        <path class="inecobank-checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
-                    </svg>
-                </div>
-
-                <h1 class="inecobank-processing-title">
-                    <?php esc_html_e('Payment Successful!', 'woo-inecobank-payment-gateway'); ?>
-                </h1>
-
-                <p class="inecobank-processing-message">
-                    <?php esc_html_e('Thank you! Your payment has been processed successfully.', 'woo-inecobank-payment-gateway'); ?>
-                </p>
-
-                <p class="inecobank-processing-submessage">
-                    <?php esc_html_e('Please wait while we confirm your order...', 'woo-inecobank-payment-gateway'); ?>
-                </p>
+        <!-- Success Processing -->
+        <div class="inecobank-processing-success">
+            <div class="inecobank-spinner">
+                <svg class="inecobank-checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                    <circle class="inecobank-checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+                    <path class="inecobank-checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                </svg>
             </div>
 
-        <?php else: ?>
-            <!-- Failed/Processing -->
-            <div class="inecobank-processing-pending">
-                <div class="inecobank-spinner">
-                    <div class="inecobank-loader"></div>
-                </div>
+            <h1 class="inecobank-processing-title">
+                <?php esc_html_e('Payment Successful!', 'woo-inecobank-payment-gateway'); ?>
+            </h1>
 
-                <h1 class="inecobank-processing-title">
-                    <?php esc_html_e('Processing Payment...', 'woo-inecobank-payment-gateway'); ?>
-                </h1>
+            <p class="inecobank-processing-message">
+                <?php esc_html_e('Thank you! Your payment has been processed successfully.', 'woo-inecobank-payment-gateway'); ?>
+            </p>
 
-                <p class="inecobank-processing-message">
-                    <?php esc_html_e('Please wait while we verify your payment.', 'woo-inecobank-payment-gateway'); ?>
-                </p>
+            <p class="inecobank-processing-submessage">
+                <?php esc_html_e('Please wait while we confirm your order...', 'woo-inecobank-payment-gateway'); ?>
+            </p>
+        </div>
 
-                <p class="inecobank-processing-submessage">
-                    <?php esc_html_e('Do not close this window or press the back button.', 'woo-inecobank-payment-gateway'); ?>
-                </p>
+        <?php
+else: ?>
+        <!-- Failed/Processing -->
+        <div class="inecobank-processing-pending">
+            <div class="inecobank-spinner">
+                <div class="inecobank-loader"></div>
             </div>
-        <?php endif; ?>
+
+            <h1 class="inecobank-processing-title">
+                <?php esc_html_e('Processing Payment...', 'woo-inecobank-payment-gateway'); ?>
+            </h1>
+
+            <p class="inecobank-processing-message">
+                <?php esc_html_e('Please wait while we verify your payment.', 'woo-inecobank-payment-gateway'); ?>
+            </p>
+
+            <p class="inecobank-processing-submessage">
+                <?php esc_html_e('Do not close this window or press the back button.', 'woo-inecobank-payment-gateway'); ?>
+            </p>
+        </div>
+        <?php
+endif; ?>
 
         <!-- Transaction Details -->
         <?php if ($order_id_param): ?>
-            <div class="inecobank-transaction-details">
-                <p class="inecobank-reference">
-                    <?php esc_html_e('Reference:', 'woo-inecobank-payment-gateway'); ?>
-                    <strong><?php echo esc_html($payment_id ? $payment_id : $order_id_param); ?></strong>
-                </p>
-            </div>
-        <?php endif; ?>
+        <div class="inecobank-transaction-details">
+            <p class="inecobank-reference">
+                <?php esc_html_e('Reference:', 'woo-inecobank-payment-gateway'); ?>
+                <strong>
+                    <?php echo esc_html($payment_id ? $payment_id : $order_id_param); ?>
+                </strong>
+            </p>
+        </div>
+        <?php
+endif; ?>
 
     </div>
 </div>
@@ -128,9 +133,9 @@ $is_success = '0' === $response_code || 'success' === strtolower($description);
 
         // Fallback: if redirect doesn't work after 10 seconds, show error
         setTimeout(function () {
-            document.querySelector('.inecobank-processing-message').innerHTML = '<?php esc_html_e('Taking longer than expected...', 'woo-inecobank-payment-gateway'); ?>';
-        }, 10000);
-    })();
+            document.querySelector('.inecobank-processing-message').innerHTML = '<?php esc_html_e('Taking longer than expected...', 'woo - inecobank - payment - gateway'); ?>';
+    }, 10000);
+    }) ();
 </script>
 
 <style>

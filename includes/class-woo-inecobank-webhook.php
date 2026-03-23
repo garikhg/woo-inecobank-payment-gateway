@@ -235,8 +235,6 @@ class Woo_Inecobank_Webhook
 			case 3:
 				// Reversed
 				if ($order->get_status() !== 'failed') {
-					// Restore stock before marking as failed
-					$this->restore_order_stock($order);
 					$order->update_status('failed', __('Payment was reversed.', 'woo-inecobank-payment-gateway'));
 				}
 				break;
@@ -253,8 +251,6 @@ class Woo_Inecobank_Webhook
 			case 6:
 				// Declined
 				if ($order->get_status() !== 'failed') {
-					// Restore stock before marking as failed
-					$this->restore_order_stock($order);
 					$order->update_status('failed', __('Payment was declined.', 'woo-inecobank-payment-gateway'));
 				}
 			default:
@@ -272,44 +268,63 @@ class Woo_Inecobank_Webhook
 	 */
 	private function restore_order_stock($order)
 	{
-		// Check if stock has already been restored
+		// First check: skip if our custom restoration meta exists
 		if ($order->get_meta('_inecobank_stock_restored') === 'yes') {
 			$this->logger->log('Stock already restored for order #' . $order->get_id());
 			return;
 		}
 
+		// Get the order data store to check for stock reduction flag
+		$stock_reduced = $order->get_data_store()->get_stock_reduced($order->get_id());
+
+		// If WooCommerce core says stock isn't reduced, we skip unless we find items with _reduced_stock
+		if (!$stock_reduced) {
+			$this->logger->log('Stock is not currently reduced for order #' . $order->get_id() . '. Verification pending.');
+		}
+
 		$this->logger->log('Starting stock restoration for order #' . $order->get_id());
 
-		// Get order items to restore stock
+		// Get order items and loop through to verify which items need restoration
 		$restored_items = array();
+		$items = $order->get_items();
 
-		foreach ($order->get_items() as $item_id => $item) {
+		foreach ($items as $item_id => $item) {
 			$product = $item->get_product();
 
-			if (!$product) {
+			if (!$product || !$product->managing_stock()) {
 				continue;
 			}
 
-			// Check if product manages stock
-			if (!$product->managing_stock()) {
+			// CHECK: only restore if THIS item was reduced (idempotent check)
+			$quantity_to_restore = $item->get_meta('_reduced_stock', true);
+			if (!$quantity_to_restore) {
+				$this->logger->log(sprintf('Product %s (ID: %d) not marked as reduced. Skipping.', $product->get_name(), $product->get_id()));
 				continue;
 			}
 
-			$quantity = $item->get_quantity();
 			$product_id = $product->get_id();
 			$product_name = $product->get_name();
 
 			// Get current stock before restoration
 			$old_stock = $product->get_stock_quantity();
 
-			// Increase stock quantity (rollback to previous state)
-			$new_stock = wc_update_product_stock($product, $quantity, 'increase');
+			// Increase stock quantity using the exact quantity THAT WAS REDUCED
+			$new_stock = wc_update_product_stock($product, $quantity_to_restore, 'increase');
+
+			if (is_wp_error($new_stock)) {
+				$this->logger->log(sprintf('Failed to restore stock for %s: %s', $product_name, $new_stock->get_error_message()), 'error');
+				continue;
+			}
+
+			// Remove the core item meta flag
+			$item->delete_meta_data('_reduced_stock');
+			$item->save();
 
 			$restored_items[] = sprintf(
 				'%s (ID: %d) - Quantity: %d, Stock: %d → %d',
 				$product_name,
 				$product_id,
-				$quantity,
+				$quantity_to_restore,
 				$old_stock,
 				$new_stock
 			);
@@ -318,14 +333,16 @@ class Woo_Inecobank_Webhook
 				'Restored stock for product %s (ID: %d): Added %d units, Stock changed from %d to %d',
 				$product_name,
 				$product_id,
-				$quantity,
+				$quantity_to_restore,
 				$old_stock,
 				$new_stock
 			));
 		}
 
-		// Mark stock as restored
+		// Mark stock as restored by our plugin to avoid repeated hook triggers
 		$order->update_meta_data('_inecobank_stock_restored', 'yes');
+		// Tell WooCommerce core stock is no longer reduced (idempotency for core functions)
+		$order->get_data_store()->set_stock_reduced($order->get_id(), false);
 		$order->save();
 
 		$restored_count = count($restored_items);
@@ -339,8 +356,7 @@ class Woo_Inecobank_Webhook
 			$order->add_order_note($note_message);
 			$this->logger->log('Stock restoration completed for order #' . $order->get_id() . ' - ' . $restored_count . ' items restored');
 		} else {
-			$order->add_order_note(__('No stock to restore (products do not manage stock).', 'woo-inecobank-payment-gateway'));
-			$this->logger->log('No stock to restore for order #' . $order->get_id());
+			$this->logger->log('No stock items were eligible for restoration for order #' . $order->get_id());
 		}
 	}
 

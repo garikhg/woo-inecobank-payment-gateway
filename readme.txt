@@ -5,7 +5,7 @@ Tags: payment gateway, inecobank, armenia, woocommerce, payment, credit card, de
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.2
-Stable tag: 1.1.16
+Stable tag: 1.1.17
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -285,6 +285,12 @@ Yes, but Inecobank primarily serves Armenian businesses. If you're outside Armen
 
 == Changelog ==
 
+= 1.1.17 - 2026-03-23 =
+* **Bug Fixes**
+* ✅ Fixed issue where product stock quantity was incorrectly increased twice on payment failure
+* ✅ Consolidated stock restoration logic to the order status change hook for better consistency
+* ✅ Improved idempotency of stock restoration process
+
 = 1.1.16 - 2026-01-12 =
 * **New Features**
 * ✅ Added automatic stock restoration when orders fail or are not paid
@@ -429,6 +435,9 @@ Yes, but Inecobank primarily serves Armenian businesses. If you're outside Armen
 * ✅ PHP 7.2+ support
 
 == Upgrade Notice ==
+
+= 1.1.17 =
+Fixed double stock restoration issue. Ensures accurate inventory counts on payment failure.
 
 = 1.1.16 =
 Stock restoration feature. Automatically restores product quantities when orders fail or are unpaid.
