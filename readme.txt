@@ -5,7 +5,7 @@ Tags: payment gateway, inecobank, armenia, woocommerce, payment, credit card, de
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.2
-Stable tag: 1.1.17
+Stable tag: 1.1.18
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -284,6 +284,12 @@ Yes, but Inecobank primarily serves Armenian businesses. If you're outside Armen
 7. Payment logs - Detailed logging for troubleshooting
 
 == Changelog ==
+
+= 1.1.18 - 2026-03-23 =
+* **Critical Fix**
+* ✅ Fixed issue where users were not being redirected to Inecobank payment page on Headless setups
+* ✅ Added robust redirection logic to the order receipt page as a fallback
+* ✅ Improved REST API compatibility by ensuring proper response format during checkout
 
 = 1.1.17 - 2026-03-23 =
 * **Bug Fixes**
