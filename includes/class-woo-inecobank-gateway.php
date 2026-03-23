@@ -313,8 +313,8 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
             $this->logger->log('Order registered successfully. Inecobank UUID: ' . $result['order_id'] . ', Order Number: ' . $order->get_order_number());
 
             // Check if we should keep the cart contents
-            if ($this->keep_cart) {
-                // If keep_cart is enabled, we manually send the JSON response and exit
+            if ($this->keep_cart && !defined('REST_REQUEST')) {
+                // If keep_cart is enabled and NOT a REST request, we manually send the JSON response and exit
                 // to prevent WooCommerce from proceeding to empty the cart.
                 wp_send_json(array(
                     'result' => 'success',
@@ -389,7 +389,60 @@ class Woo_Inecobank_Gateway extends WC_Payment_Gateway
      */
     public function receipt_page($order_id)
     {
-        echo '<p>' . esc_html__('Thank you for your order, please click the button below to pay with Inecobank.', 'woo-inecobank-payment-gateway') . '</p>';
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            return;
+        }
+
+        $this->logger->log('Receipt page accessed for order #' . $order_id);
+
+        // If order is not pending or not inecobank, shouldn't be here
+        if ($order->get_payment_method() !== $this->id) {
+            return;
+        }
+
+        if ($order->is_paid()) {
+            echo '<p>' . esc_html__('This order has already been paid.', 'woo-inecobank-payment-gateway') . '</p>';
+            return;
+        }
+
+        // Generate a fresh unique order number for this payment attempt
+        $unique_order_number = $order->get_order_number() . '-' . time();
+        
+        $this->logger->log('Registering order attempt from receipt page: ' . $unique_order_number);
+
+        // Register order with Inecobank
+        $result = $this->api->register_order($order, $this->payment_type, $unique_order_number);
+
+        if ($result['success']) {
+            // Save the unique order number we sent to Inecobank (for webhook lookup)
+            $order->update_meta_data('_inecobank_order_id', $unique_order_number);
+            // Save the UUID returned by Inecobank (for API status checks)
+            $order->update_meta_data('_inecobank_uuid', $result['order_id']);
+            $order->save();
+
+            $form_url = $result['form_url'];
+            
+            echo '<p>' . esc_html__('Thank you for your order, please click the button below if you are not automatically redirected to the Inecobank payment page.', 'woo-inecobank-payment-gateway') . '</p>';
+            echo '<p><a href="' . esc_url($form_url) . '" class="button alt" id="inecobank_pay_button" style="display: inline-block; padding: 10px 20px; background: #004d99; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">' . esc_html__('Pay with Inecobank', 'woo-inecobank-payment-gateway') . '</a></p>';
+            
+            // Auto-redirect
+            echo '<script type="text/javascript">
+                (function() {
+                    var payButton = document.getElementById("inecobank_pay_button");
+                    if (payButton) {
+                        setTimeout(function() {
+                            window.location.href = "' . esc_url_raw($form_url) . '";
+                        }, 500);
+                    }
+                })();
+            </script>';
+        } else {
+            $error_message = $result['error_message'] ?? __('Payment registration failed. Please try again.', 'woo-inecobank-payment-gateway');
+            echo '<div class="woocommerce-error" style="border: 1px solid #e2401c; padding: 15px; background: #fdf2f0; color: #e2401c; border-radius: 4px; margin-bottom: 20px;">' . esc_html($error_message) . '</div>';
+            echo '<p>' . esc_html__('There was an issue initiating the payment. You can try again by clicking below or contact our support.', 'woo-inecobank-payment-gateway') . '</p>';
+            echo '<p><a href="' . esc_url($order->get_checkout_payment_url()) . '" class="button">' . esc_html__('Try Again', 'woo-inecobank-payment-gateway') . '</a></p>';
+        }
     }
 
     /**
